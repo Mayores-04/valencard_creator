@@ -1369,11 +1369,12 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
             height: '800px',
             transform: `scale(${zoom})`,
             transformOrigin: 'top left',
-            backgroundImage: background.includes('gradient') ? background : background.startsWith('data:image/svg') ? `url("${background}")` : background.includes('url') && !background.startsWith('url(https') ? background : 'none',
-            backgroundColor: background.startsWith('#') || background.startsWith('rgb') ? background : background.startsWith('url(https') || background.startsWith('data:image/svg') ? 'transparent' : '#ffffff',
+            backgroundImage: background.includes('gradient') ? background : background.startsWith('data:image/svg') ? `url("${background}")` : background.includes('url') && !background.startsWith('url(https') ? background : background.startsWith('/templates/') ? `url("${background}")` : 'none',
+            backgroundColor: background.startsWith('#') || background.startsWith('rgb') ? background : background.startsWith('url(https') || background.startsWith('data:image/svg') || background.startsWith('/templates/') ? 'transparent' : '#ffffff',
             backgroundSize: '100% 100%',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
+            overflow: 'hidden',
           }}
         >
           {background.startsWith('url(https') && (
