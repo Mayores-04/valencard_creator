@@ -83,6 +83,11 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const canvasRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Remote upload session for phone -> desktop insert
+  const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const pollingRef = useRef<number | null>(null);
+
   const zoom = externalZoom;
 
   // Initialize history with initial state
@@ -139,6 +144,8 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const saveToHistory = useCallback(() => {
     setShouldSaveHistory(true);
   }, []);
+
+  
 
   // Undo function
   const undo = useCallback(() => {
@@ -518,6 +525,71 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
     setSelectedText(type === 'text' ? id : null);
     setSelectedImageId(type === 'image' ? id : null);
   }, []);
+
+  // Remote upload session for phone -> desktop insert (moved after selectElement to avoid TDZ)
+  const createUploadSession = useCallback(() => {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    setUploadSessionId(id);
+    setUploadedFiles([]);
+    return id;
+  }, []);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      window.clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const pollUploadsOnce = useCallback(async (sessionId: string) => {
+    try {
+      const res = await fetch(`/api/uploads/${sessionId}`);
+      const body = await res.json();
+      const files: string[] = body?.files || [];
+      const newFiles = files.filter(f => !uploadedFiles.includes(f));
+      if (newFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...newFiles]);
+        // Add each new file to canvas as user image
+        setUserImages(prev => {
+          const baseIndex = prev.length;
+          const additions = newFiles.map((url, i) => ({
+            id: `image-${Date.now()}-${baseIndex + i}`,
+            src: url,
+            x: (templateData?.imageArea ? templateData.imageArea.x : 150) + ((baseIndex + i) * 20),
+            y: (templateData?.imageArea ? templateData.imageArea.y : 150) + ((baseIndex + i) * 20),
+            width: templateData?.imageArea ? templateData.imageArea.width : 300,
+            height: templateData?.imageArea ? templateData.imageArea.height : 300,
+            rotation: 0,
+            shape: 'rectangle',
+            offset: { x: 0, y: 0 },
+            outlineColor: undefined,
+            outlineWidth: 0,
+          } as UserImage));
+          // select the last one
+          setTimeout(() => {
+            const last = additions[additions.length - 1];
+            if (last) selectElement(last.id, 'image');
+          }, 50);
+          return [...prev, ...additions];
+        });
+        saveToHistory();
+      }
+    } catch (err) {
+      // ignore polling errors
+    }
+  }, [uploadedFiles, templateData, saveToHistory, selectElement]);
+
+  const startPolling = useCallback((sessionId: string) => {
+    stopPolling();
+    // poll immediately
+    pollUploadsOnce(sessionId);
+    const id = window.setInterval(() => pollUploadsOnce(sessionId), 2000);
+    pollingRef.current = id;
+  }, [pollUploadsOnce, stopPolling]);
+
+  useEffect(() => {
+    return () => stopPolling();
+  }, [stopPolling]);
 
   // Get clip path for shapes
   const getImageClipPath = useCallback((shape?: string) => {
@@ -1268,10 +1340,9 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
 
             <Tabs.Content value="stickers" className="outline-none">
               <div className="mb-4">
-                <h3 className="font-semibold mb-3 text-gray-300">ALPHA Stickers</h3>
+                <h3 className="font-semibold mb-3 text-gray-300">Stickers</h3>
                 <StickerGrid stickers={alphaStickers} type="alpha" onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
                 <Separator.Root className="my-4 h-px bg-gray-700" />
-                <h3 className="font-semibold mb-3 text-gray-300">Love Stickers</h3>
                 <StickerGrid stickers={loveStickers} type="emoji" onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
                 <Separator.Root className="my-4 h-px bg-gray-700" />
                 <h3 className="font-semibold mb-3 text-gray-300">Icon Stickers</h3>
@@ -1289,6 +1360,31 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                 onImageRemove={() => selectedImageId && deleteElement(selectedImageId, 'image')}
                 onShapeChange={(shape) => selectedImageId && setUserImages(prev => prev.map(img => img.id === selectedImageId ? { ...img, shape } : img))}
               />
+
+              <div className="mt-4 p-3 border border-gray-700 rounded bg-[#071028]">
+                <h3 className="font-semibold mb-2 text-gray-300">Insert from Phone (Scan QR)</h3>
+                {!uploadSessionId ? (
+                  <div className="flex flex-col gap-2">
+                    <Button onClick={() => { const s = createUploadSession(); startPolling(s); }} size="sm">Create Session & QR</Button>
+                    <Button onClick={() => { const s = createUploadSession(); navigator.clipboard?.writeText(`${location.origin}/upload/${s}`); startPolling(s); }} variant="outline" size="sm">Create + Copy URL</Button>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex flex-col items-center gap-3">
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${location.origin}/upload/${uploadSessionId}`)}`} alt="QR" />
+                      <div>
+                        <div className="text-sm text-gray-300">Open this on your phone:</div>
+                        <a className="text-xs text-cyan-300 break-all" href={`/upload/${uploadSessionId}`} target="_blank" rel="noreferrer">{`${location.origin}/upload/${uploadSessionId}`}</a>
+                        <div className="mt-2 flex gap-2">
+                          <Button onClick={() => navigator.clipboard?.writeText(`${location.origin}/upload/${uploadSessionId}`)} size="sm">Copy URL</Button>
+                          <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-400">New uploads will automatically appear on the canvas.</div>
+                  </div>
+                )}
+              </div>
             </Tabs.Content>
 
             <Tabs.Content value="text" className="outline-none">
