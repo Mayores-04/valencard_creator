@@ -87,6 +87,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const pollingRef = useRef<number | null>(null);
+  const [lastPolledFiles, setLastPolledFiles] = useState<string[]>([]);
   
 
   const zoom = externalZoom;
@@ -547,6 +548,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       const res = await fetch(`/api/uploads/${sessionId}`);
       const body = await res.json();
       const files: string[] = body?.files || [];
+      setLastPolledFiles(files);
       // log for debugging
       // eslint-disable-next-line no-console
       console.debug('[pollUploadsOnce] session=', sessionId, 'files=', files);
@@ -1391,6 +1393,18 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                       </div>
                     </div>
                     <div className="mt-3 text-xs text-gray-400">New uploads will automatically appear on the canvas.</div>
+                    <div className="mt-3 text-xs text-gray-300">
+                      <div className="font-medium">Debug — last polled uploads:</div>
+                      {lastPolledFiles.length === 0 ? (
+                        <div className="text-xs text-gray-400">(no files returned yet)</div>
+                      ) : (
+                        <ul className="text-xs break-all mt-1">
+                          {lastPolledFiles.map((f, i) => (
+                            <li key={i} className="mt-1"><a href={f} target="_blank" rel="noreferrer" className="text-cyan-300">{f}</a></li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   </div>
                 )}
                 
