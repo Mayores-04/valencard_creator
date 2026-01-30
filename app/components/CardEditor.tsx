@@ -738,11 +738,31 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       setTextElements(prev => prev.filter(t => t.id !== id));
       if (selectedText === id) clearSelection();
     } else {
+      // capture src of image to mark as deleted on server if needed
+      const img = userImages.find(u => u.id === id);
+      const srcToDelete = img?.src;
       setUserImages(prev => prev.filter(img => img.id !== id));
       if (selectedImageId === id) clearSelection();
+
+      // If we have an upload session and the image looks like an uploaded resource,
+      // mark it deleted on the server so the poller won't re-add it.
+      (async () => {
+        try {
+          if (!srcToDelete || !uploadSessionId) return;
+          const looksLikeUpload = srcToDelete.startsWith('/uploads/') || srcToDelete.includes('cloudinary') || srcToDelete.startsWith('http');
+          if (!looksLikeUpload) return;
+          await fetch(`/api/uploads/${uploadSessionId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: srcToDelete }),
+          });
+        } catch (e) {
+          console.warn('[deleteElement] markDeleted failed', e);
+        }
+      })();
     }
     saveToHistory();
-  }, [selectedSticker, selectedText, selectedImageId, clearSelection, saveToHistory]);
+  }, [selectedSticker, selectedText, selectedImageId, clearSelection, saveToHistory, userImages, uploadSessionId]);
 
   // Layer management functions
   const bringForward = useCallback((id: string, type: ElementType) => {
@@ -1407,7 +1427,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                         <a className="text-xs text-cyan-300 break-all" href={`/upload/${uploadSessionId}`} target="_blank" rel="noreferrer">{`${location.origin}/upload/${uploadSessionId}`}</a>
                         <div className="mt-2 flex gap-2">
                           <Button onClick={() => navigator.clipboard?.writeText(`${location.origin}/upload/${uploadSessionId}`)} size="sm">Copy URL</Button>
-                          {/* <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button> */}
+                          <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button>
                         </div>
                       </div>
                     </div>

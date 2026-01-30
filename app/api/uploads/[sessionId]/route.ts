@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import { getUploads } from '../../uploadStore';
+import { getUploads, markDeleted, getDeleted } from '../../uploadStore';
 
 export async function GET(req: Request) {
   try {
@@ -35,8 +35,25 @@ export async function GET(req: Request) {
       }
     }
 
+    const deletedSet = getDeleted(sessionId);
     const merged = Array.from(new Set([...filesFromFs, ...filesFromStore, ...cloudinaryFiles]));
-    return NextResponse.json({ files: merged, debug: { filesFromFs, filesFromStore, cloudinaryFiles } });
+    const filtered = merged.filter(u => !deletedSet.has(u));
+    return NextResponse.json({ files: filtered, debug: { filesFromFs, filesFromStore, cloudinaryFiles, deleted: Array.from(deletedSet) } });
+  } catch (err) {
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const url = new URL(req.url);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const sessionId = parts[parts.length - 1];
+    const body = await req.json().catch(() => ({} as any));
+    const target: string | undefined = body?.url || body?.target;
+    if (!target) return NextResponse.json({ error: 'missing url' }, { status: 400 });
+    markDeleted(sessionId, String(target));
+    return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
