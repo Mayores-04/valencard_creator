@@ -50,7 +50,7 @@ export default function Home() {
 
   if (!showTemplates) {
     return (
-      <div>
+      <div className="">
         <div className="fixed top-0 left-0 right-0 z-50 bg-[#0a1628] border-b border-gray-700 px-4 sm:px-6 py-3 shadow-lg">
           <div className="flex items-center justify-between gap-4">
             {/* Left: Back Button */}
@@ -125,7 +125,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="pt-16">
+        <div>
           <CardEditor 
             template={selectedTemplate} 
             templateData={selectedTemplateData}
@@ -138,7 +138,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d]">
+    <div className="bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d]">
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-12">

@@ -150,7 +150,7 @@ export function ImageElement({
                   </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
-                  <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
+                  <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50" side="right" align="start" sideOffset={8}>
                     <DropdownMenuItems
                       elementId={image.id}
                       elementType="image"

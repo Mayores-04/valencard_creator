@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, GripVertical, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, GripVertical, Trash2, ChevronDown } from 'lucide-react';
 
 type LayerItem = {
   id: string;
@@ -36,6 +36,7 @@ export default function LayersPanel({
 }: Props) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -63,10 +64,27 @@ export default function LayersPanel({
   };
 
   return (
-    <div className="bg-[#071028] border border-gray-700 rounded-lg shadow-lg p-2 max-60 text-sm text-gray-200">
-      <div className="flex items-center justify-between px-2 py-1 mb-2">
-        <strong className="text-xs text-gray-300">Layers</strong>
-      </div>
+    <>
+      {isMinimized ? (
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="fixed right-0 mx-3 lg:mx-5 my-1 bg-[#071028] border border-gray-700 rounded-lg shadow-lg p-2 hover:bg-[#0b1220] transition-colors"
+          title="Expand Layers Panel"
+        >
+          <ChevronDown className="w-5 h-5 text-[#26C4E1]" />
+        </button>
+      ) : (
+        <div className="bg-[#071028] border border-gray-700 rounded-lg shadow-lg p-2 max-60 text-sm text-gray-200">
+          <div className="flex items-center justify-between px-2 py-1 mb-2">
+            <strong className="text-xs text-gray-300">Layers</strong>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-1 rounded hover:bg-gray-800 text-gray-400 hover:text-gray-200 transition-colors"
+              title="Minimize"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
 
       <div className="space-y-1 overflow-auto max-h-[420px]">
         {layers.map((layer, index) => (
@@ -120,5 +138,7 @@ export default function LayersPanel({
         ))}
       </div>
     </div>
+      )}
+    </>
   );
 }
