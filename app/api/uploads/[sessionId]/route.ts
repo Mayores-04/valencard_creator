@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-export async function GET(req: Request, { params }: { params: { sessionId: string } }) {
+export async function GET(req: Request) {
   try {
-    const { sessionId } = params;
+    const url = new URL(req.url);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const sessionId = parts[parts.length - 1];
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', sessionId);
     const exists = await fs.promises.stat(uploadsDir).then(() => true).catch(() => false);
     if (!exists) return NextResponse.json({ files: [] });
