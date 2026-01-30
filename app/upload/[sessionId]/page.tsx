@@ -20,14 +20,15 @@ export default function UploadPage({ params }: { params: { sessionId: string } }
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const body = await res.json();
       if (body.ok) {
-        setStatus('Upload successful');
-        // optional: redirect to a simple success page or keep listing
+        setStatus(`Upload successful: ${body.url}`);
         setTimeout(() => router.refresh(), 500);
       } else {
-        setStatus('Upload failed');
+        setStatus(`Upload failed: ${body.error || JSON.stringify(body)}`);
+        console.error('Upload failed response', body);
       }
     } catch (err) {
-      setStatus('Upload error');
+      setStatus(`Upload error: ${String(err)}`);
+      console.error('Upload exception', err);
     }
   };
 

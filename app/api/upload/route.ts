@@ -7,6 +7,7 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const file = form.get('file') as File | null;
     const session = form.get('session') as string | null;
+    console.log('[api/upload] received upload, session=', session, 'file=', file ? file.name : null);
 
     if (!file || !session) return NextResponse.json({ error: 'missing file or session' }, { status: 400 });
 
