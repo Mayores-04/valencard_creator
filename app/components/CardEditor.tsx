@@ -1396,7 +1396,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                 {!uploadSessionId ? (
                   <div className="flex flex-col gap-2">
                     <Button onClick={() => { const s = createUploadSession(); startPolling(s); }} size="sm">Create Session & QR</Button>
-                    <Button onClick={() => { const s = createUploadSession(); navigator.clipboard?.writeText(`${location.origin}/upload/${s}`); startPolling(s); }} variant="outline" size="sm">Create + Copy URL</Button>
+                    {/* <Button onClick={() => { const s = createUploadSession(); navigator.clipboard?.writeText(`${location.origin}/upload/${s}`); startPolling(s); }} variant="outline" size="sm">Create + Copy URL</Button> */}
                   </div>
                 ) : (
                   <div>
@@ -1407,12 +1407,12 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                         <a className="text-xs text-cyan-300 break-all" href={`/upload/${uploadSessionId}`} target="_blank" rel="noreferrer">{`${location.origin}/upload/${uploadSessionId}`}</a>
                         <div className="mt-2 flex gap-2">
                           <Button onClick={() => navigator.clipboard?.writeText(`${location.origin}/upload/${uploadSessionId}`)} size="sm">Copy URL</Button>
-                          <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button>
+                          {/* <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button> */}
                         </div>
                       </div>
                     </div>
                     <div className="mt-3 text-xs text-gray-400">New uploads will automatically appear on the canvas.</div>
-                    <div className="mt-3 text-xs text-gray-300">
+                    {/* <div className="mt-3 text-xs text-gray-300">
                       <div className="font-medium">Debug — last polled uploads:</div>
                       {lastPolledFiles.length === 0 ? (
                         <div className="text-xs text-gray-400">(no files returned yet)</div>
@@ -1429,7 +1429,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                           <pre className="text-xs whitespace-pre-wrap break-all mt-1">{JSON.stringify(lastPolledDebug, null, 2)}</pre>
                         </div>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                 )}
                 
