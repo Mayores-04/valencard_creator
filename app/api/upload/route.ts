@@ -17,9 +17,9 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     // If Cloudinary creds are present, upload to Cloudinary and return the secure URL
-    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
-    const API_KEY = process.env.CLOUDINARY_API_KEY;
-    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY || process.env.API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET || process.env.API_SECRET;
     if (CLOUD_NAME && API_KEY && API_SECRET) {
       try {
         const timestamp = Math.floor(Date.now() / 1000);

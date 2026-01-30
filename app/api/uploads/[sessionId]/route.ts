@@ -15,9 +15,9 @@ export async function GET(req: Request) {
     const filesFromStore = getUploads(sessionId) || [];
 
     // Try Cloudinary listing when credentials are available
-    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
-    const API_KEY = process.env.CLOUDINARY_API_KEY;
-    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || process.env.CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY || process.env.API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET || process.env.API_SECRET;
     let cloudinaryFiles: string[] = [];
     if (CLOUD_NAME && API_KEY && API_SECRET) {
       try {
