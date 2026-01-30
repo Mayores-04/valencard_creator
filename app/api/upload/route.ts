@@ -15,17 +15,27 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(arrayBuffer);
 
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', session);
-    await fs.promises.mkdir(uploadsDir, { recursive: true });
+    try {
+      await fs.promises.mkdir(uploadsDir, { recursive: true });
 
-    // sanitize filename
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const filename = `${Date.now()}-${safeName}`;
-    const filePath = path.join(uploadsDir, filename);
+      // sanitize filename
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filename = `${Date.now()}-${safeName}`;
+      const filePath = path.join(uploadsDir, filename);
 
-    await fs.promises.writeFile(filePath, buffer);
+      await fs.promises.writeFile(filePath, buffer);
 
-    const url = `/uploads/${session}/${filename}`;
-    return NextResponse.json({ ok: true, url });
+      const url = `/uploads/${session}/${filename}`;
+      return NextResponse.json({ ok: true, url });
+    } catch (writeErr) {
+      // likely running in a serverless/read-only filesystem (e.g., Vercel).
+      // Fallback: return base64 data URL so client can use it immediately.
+      console.warn('[api/upload] write failed, falling back to data URL', writeErr);
+      const b64 = buffer.toString('base64');
+      const mime = (file as any)?.type || 'image/png';
+      const dataUrl = `data:${mime};base64,${b64}`;
+      return NextResponse.json({ ok: true, dataUrl });
+    }
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
