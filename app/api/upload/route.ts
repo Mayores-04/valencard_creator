@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { addUpload } from '../uploadStore';
-import { addUpload } from '../uploadStore';
 
 export async function POST(req: Request) {
   try {
