@@ -1,13 +1,32 @@
 "use client";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function UploadPage({ params }: { params: { sessionId: string } }) {
-  const session = params.sessionId;
+export default function UploadPage(props: any) {
+  const { params } = props || {};
+  const [session, setSession] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>('');
   const [dataUrl, setDataUrl] = useState<string | null>(null);
   const router = useRouter();
+  useEffect(() => {
+    // params may be a Promise in some Next.js contexts; handle both promise and object
+    if (params) {
+      if (typeof params.then === 'function') {
+        // params is a Promise
+        (params as Promise<any>).then((p) => {
+          if (p?.sessionId) setSession(String(p.sessionId));
+        }).catch(() => {
+          // fallback to location
+          if (typeof window !== 'undefined') setSession(window.location.pathname.split('/').pop() || '');
+        });
+      } else if (params.sessionId) {
+        setSession(String(params.sessionId));
+      }
+    } else if (typeof window !== 'undefined') {
+      setSession(window.location.pathname.split('/').pop() || '');
+    }
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

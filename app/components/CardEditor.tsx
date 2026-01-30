@@ -88,6 +88,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const pollingRef = useRef<number | null>(null);
   const [lastPolledFiles, setLastPolledFiles] = useState<string[]>([]);
+  const [lastPolledDebug, setLastPolledDebug] = useState<any>(null);
   
 
   const zoom = externalZoom;
@@ -549,6 +550,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       const body = await res.json();
       const files: string[] = body?.files || [];
       setLastPolledFiles(files);
+      setLastPolledDebug(body?.debug || null);
       // log for debugging
       // eslint-disable-next-line no-console
       console.debug('[pollUploadsOnce] session=', sessionId, 'files=', files);
@@ -1403,6 +1405,12 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                             <li key={i} className="mt-1"><a href={f} target="_blank" rel="noreferrer" className="text-cyan-300">{f}</a></li>
                           ))}
                         </ul>
+                      )}
+                      {lastPolledDebug && (
+                        <div className="mt-2 text-xs text-gray-400">
+                          <div className="font-medium">Debug details:</div>
+                          <pre className="text-xs whitespace-pre-wrap break-all mt-1">{JSON.stringify(lastPolledDebug, null, 2)}</pre>
+                        </div>
                       )}
                     </div>
                   </div>

@@ -36,7 +36,7 @@ export async function GET(req: Request) {
     }
 
     const merged = Array.from(new Set([...filesFromFs, ...filesFromStore, ...cloudinaryFiles]));
-    return NextResponse.json({ files: merged });
+    return NextResponse.json({ files: merged, debug: { filesFromFs, filesFromStore, cloudinaryFiles } });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
