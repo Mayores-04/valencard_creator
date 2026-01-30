@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { addUpload } from '../uploadStore';
 
 export async function POST(req: Request) {
   try {
@@ -26,6 +27,7 @@ export async function POST(req: Request) {
       await fs.promises.writeFile(filePath, buffer);
 
       const url = `/uploads/${session}/${filename}`;
+      try { addUpload(session, url); } catch (e) { /* ignore */ }
       return NextResponse.json({ ok: true, url });
     } catch (writeErr) {
       // likely running in a serverless/read-only filesystem (e.g., Vercel).
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
       const b64 = buffer.toString('base64');
       const mime = (file as any)?.type || 'image/png';
       const dataUrl = `data:${mime};base64,${b64}`;
+      try { addUpload(session, dataUrl); } catch (e) { /* ignore */ }
       return NextResponse.json({ ok: true, dataUrl });
     }
   } catch (err) {
