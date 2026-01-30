@@ -547,38 +547,44 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       const res = await fetch(`/api/uploads/${sessionId}`);
       const body = await res.json();
       const files: string[] = body?.files || [];
-      const newFiles = files.filter(f => !uploadedFiles.includes(f));
-      if (newFiles.length > 0) {
-        setUploadedFiles(prev => [...prev, ...newFiles]);
-        // Add each new file to canvas as user image
-        setUserImages(prev => {
-          const baseIndex = prev.length;
-          const additions = newFiles.map((url, i) => ({
-            id: `image-${Date.now()}-${baseIndex + i}`,
-            src: url,
-            x: (templateData?.imageArea ? templateData.imageArea.x : 150) + ((baseIndex + i) * 20),
-            y: (templateData?.imageArea ? templateData.imageArea.y : 150) + ((baseIndex + i) * 20),
-            width: templateData?.imageArea ? templateData.imageArea.width : 300,
-            height: templateData?.imageArea ? templateData.imageArea.height : 300,
-            rotation: 0,
-            shape: 'rectangle',
-            offset: { x: 0, y: 0 },
-            outlineColor: undefined,
-            outlineWidth: 0,
-          } as UserImage));
-          // select the last one
+      // log for debugging
+      // eslint-disable-next-line no-console
+      console.debug('[pollUploadsOnce] session=', sessionId, 'files=', files);
+
+      // Add any file URLs that aren't already present in userImages (by src)
+      setUserImages(prev => {
+        const existingSrcs = new Set(prev.map(p => p.src));
+        const additions = files.filter(f => !existingSrcs.has(f)).map((url, i) => ({
+          id: `image-${Date.now()}-${prev.length + i}`,
+          src: url,
+          x: (templateData?.imageArea ? templateData.imageArea.x : 150) + ((prev.length + i) * 20),
+          y: (templateData?.imageArea ? templateData.imageArea.y : 150) + ((prev.length + i) * 20),
+          width: templateData?.imageArea ? templateData.imageArea.width : 300,
+          height: templateData?.imageArea ? templateData.imageArea.height : 300,
+          rotation: 0,
+          shape: 'rectangle' as const,
+          offset: { x: 0, y: 0 },
+          outlineColor: undefined,
+          outlineWidth: 0,
+        } as UserImage));
+
+        if (additions.length > 0) {
+          // select the last one after state update
           setTimeout(() => {
             const last = additions[additions.length - 1];
             if (last) selectElement(last.id, 'image');
           }, 50);
+          saveToHistory();
           return [...prev, ...additions];
-        });
-        saveToHistory();
-      }
+        }
+        return prev;
+      });
     } catch (err) {
       // ignore polling errors
+      // eslint-disable-next-line no-console
+      console.warn('[pollUploadsOnce] error', err);
     }
-  }, [uploadedFiles, templateData, saveToHistory, selectElement]);
+  }, [templateData, saveToHistory, selectElement]);
 
   const startPolling = useCallback((sessionId: string) => {
     stopPolling();
