@@ -8,9 +8,24 @@ export interface IconSticker {
 }
 
 export const alphaStickers: string[] = [
-  '/stickers/alpha/KOBE.png',
-  '/stickers/alpha/alpha-sticker-1.png',
-  '/stickers/alpha/alpha-sticker-2.png',
+  '/stickers/8.png',
+  '/stickers/9.png',
+  '/stickers/10.png',
+  '/stickers/11.png',
+  '/stickers/12.png',
+  '/stickers/13.png',
+  '/stickers/14.png',
+  '/stickers/15.png',
+  '/stickers/16.png',
+  '/stickers/17.png',
+  '/stickers/18.png',
+  '/stickers/19.png',
+  '/stickers/20.png',
+  '/stickers/21.png',
+  '/stickers/22.png',
+  '/stickers/23.png',
+  '/stickers/ALPHA ICONS.png',
+  '/stickers/ALPHA ICON 2.png',
 ];
 
 export const loveStickers: string[] = [

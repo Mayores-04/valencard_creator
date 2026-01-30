@@ -1,4 +1,4 @@
-// Template data for Valentine cards
+﻿// Template data for Valentine cards
 export interface Template {
   id: string;
   name: string;
@@ -33,7 +33,7 @@ export const templates: Template[] = [
       y: 150,
       width: 300,
       height: 300,
-      borderRadius: 150, // Circular
+      borderRadius: 150,
     },
   },
   {
@@ -61,7 +61,7 @@ export const templates: Template[] = [
       y: 200,
       width: 200,
       height: 200,
-      borderRadius: 100, // Circular
+      borderRadius: 100,
     },
   },
   {
@@ -81,7 +81,7 @@ export const templates: Template[] = [
   {
     id: 'alpha-valentine',
     name: 'ALPHA Valentine',
-    thumbnail: '/templates/alpha/valencard_template1.png',
+    thumbnail: '/templates/alpha/valencard_template2.png',
     category: 'alpha',
     description: 'Exclusive ALPHA Valentine design',
     imageArea: {
@@ -89,7 +89,7 @@ export const templates: Template[] = [
       y: 150,
       width: 400,
       height: 400,
-      borderRadius: 200, // Circular
+      borderRadius: 200,
     },
   },
 ];
