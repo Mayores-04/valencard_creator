@@ -87,6 +87,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const [uploadSessionId, setUploadSessionId] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const pollingRef = useRef<number | null>(null);
+  const [pasteUrl, setPasteUrl] = useState<string>('');
 
   const zoom = externalZoom;
 
@@ -590,6 +591,27 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   useEffect(() => {
     return () => stopPolling();
   }, [stopPolling]);
+
+  const insertImageUrl = useCallback((url: string) => {
+    if (!url) return;
+    saveToHistory();
+    const id = `image-${Date.now()}`;
+    const img: UserImage = {
+      id,
+      src: url,
+      x: templateData?.imageArea ? templateData.imageArea.x : 150,
+      y: templateData?.imageArea ? templateData.imageArea.y : 150,
+      width: templateData?.imageArea ? templateData.imageArea.width : 300,
+      height: templateData?.imageArea ? templateData.imageArea.height : 300,
+      rotation: 0,
+      shape: 'rectangle',
+      offset: { x: 0, y: 0 },
+      outlineColor: undefined,
+      outlineWidth: 0,
+    };
+    setUserImages(prev => [...prev, img]);
+    setTimeout(() => selectElement(id, 'image'), 50);
+  }, [saveToHistory, templateData, selectElement]);
 
   // Get clip path for shapes
   const getImageClipPath = useCallback((shape?: string) => {
@@ -1384,6 +1406,22 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                     <div className="mt-3 text-xs text-gray-400">New uploads will automatically appear on the canvas.</div>
                   </div>
                 )}
+                <div className="mt-3">
+                  <h4 className="text-sm font-medium text-gray-300">Paste Data URL / Image URL</h4>
+                  <div className="flex gap-2 mt-2">
+                    <Input value={pasteUrl} onChange={(e) => setPasteUrl((e.target as HTMLInputElement).value)} placeholder="Paste image URL or data URL here" />
+                    <Button size="sm" onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        setPasteUrl(text);
+                      } catch (e) {
+                        // ignore
+                      }
+                    }}>Paste</Button>
+                    <Button size="sm" onClick={() => { insertImageUrl(pasteUrl); setPasteUrl(''); }}>Insert</Button>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-2">If uploads returned a Data URL fallback, paste it here and click Insert to add directly to the canvas.</div>
+                </div>
               </div>
             </Tabs.Content>
 
