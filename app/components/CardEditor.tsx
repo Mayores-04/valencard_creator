@@ -89,6 +89,13 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const pollingRef = useRef<number | null>(null);
   const [lastPolledFiles, setLastPolledFiles] = useState<string[]>([]);
   const [lastPolledDebug, setLastPolledDebug] = useState<any>(null);
+  // Cropping state
+  const [croppingImageId, setCroppingImageId] = useState<string | null>(null);
+  const [isCropping, setIsCropping] = useState(false);
+  const cropAreaRef = useRef<HTMLDivElement | null>(null);
+  const cropImageRef = useRef<HTMLImageElement | null>(null);
+  const [cropRect, setCropRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const cropStateRef = useRef<{ dragging: boolean; startX: number; startY: number } | null>(null);
   
 
   const zoom = externalZoom;
@@ -1374,6 +1381,16 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
                 onShapeChange={(shape) => selectedImageId && setUserImages(prev => prev.map(img => img.id === selectedImageId ? { ...img, shape } : img))}
               />
 
+              {selectedImageId && (
+                <div className="mt-3 flex gap-2">
+                  <Button size="sm" onClick={() => {
+                    setCroppingImageId(selectedImageId);
+                    setIsCropping(true);
+                    setCropRect(null);
+                  }}>Crop</Button>
+                </div>
+              )}
+
               <div className="mt-4 p-3 border border-gray-700 rounded bg-[#071028]">
                 <h3 className="font-semibold mb-2 text-gray-300">Insert from Phone (Scan QR)</h3>
                 {!uploadSessionId ? (
@@ -1753,6 +1770,66 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
         </div>
         </div>
       </div>
+      {/* Crop modal */}
+      {isCropping && croppingImageId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="bg-[#071028] p-4 rounded shadow-lg max-w-[90vw] max-h-[90vh] overflow-auto">
+            <div className="text-gray-200 font-medium mb-2">Crop image</div>
+            <div style={{ width: 640, height: 480, position: 'relative', background: '#051726' }} ref={cropAreaRef}
+              onMouseDown={(e) => {
+                const rect = (cropAreaRef.current as HTMLDivElement).getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                cropStateRef.current = { dragging: true, startX: x, startY: y };
+                setCropRect({ x, y, w: 0, h: 0 });
+              }}
+              onMouseMove={(e) => {
+                if (!cropStateRef.current?.dragging) return;
+                const rect = (cropAreaRef.current as HTMLDivElement).getBoundingClientRect();
+                const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+                const start = cropStateRef.current.startX; const startY = cropStateRef.current.startY;
+                setCropRect({ x: Math.min(start, x), y: Math.min(startY, y), w: Math.abs(x - start), h: Math.abs(y - startY) });
+              }}
+              onMouseUp={() => { if (cropStateRef.current) cropStateRef.current.dragging = false; }}
+            >
+              <img ref={cropImageRef as any} src={userImages.find(u => u.id === croppingImageId)?.src} alt="to-crop" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              {cropRect && (
+                <div style={{ position: 'absolute', left: cropRect.x, top: cropRect.y, width: cropRect.w, height: cropRect.h, border: '2px dashed #60a5fa', background: 'rgba(96,165,250,0.08)' }} />
+              )}
+            </div>
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" onClick={async () => {
+                // perform crop
+                const imgEl = cropImageRef.current as HTMLImageElement | null;
+                if (!imgEl || !cropRect) { setIsCropping(false); setCroppingImageId(null); return; }
+                // create canvas with crop size
+                const naturalW = imgEl.naturalWidth; const naturalH = imgEl.naturalHeight;
+                const dispW = imgEl.clientWidth; const dispH = imgEl.clientHeight;
+                const scaleX = naturalW / dispW; const scaleY = naturalH / dispH;
+                const sx = Math.max(0, Math.round(cropRect.x * scaleX));
+                const sy = Math.max(0, Math.round(cropRect.y * scaleY));
+                const sw = Math.max(1, Math.round(cropRect.w * scaleX));
+                const sh = Math.max(1, Math.round(cropRect.h * scaleY));
+                const canvas = document.createElement('canvas');
+                canvas.width = sw; canvas.height = sh;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { setIsCropping(false); setCroppingImageId(null); return; }
+                // draw source image into canvas
+                const source = new window.Image();
+                source.crossOrigin = 'anonymous';
+                source.src = imgEl.src;
+                await new Promise<void>((res, rej) => { source.onload = () => res(); source.onerror = () => res(); });
+                ctx.drawImage(source, sx, sy, sw, sh, 0, 0, sw, sh);
+                const dataUrl = canvas.toDataURL('image/png');
+                // update userImages entry
+                setUserImages(prev => prev.map(img => img.id === croppingImageId ? { ...img, src: dataUrl, width: sw, height: sh } : img));
+                setIsCropping(false); setCroppingImageId(null); setCropRect(null);
+                saveToHistory();
+              }}>Confirm</Button>
+              <Button size="sm" variant="outline" onClick={() => { setIsCropping(false); setCroppingImageId(null); setCropRect(null); }}>Cancel</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Right Panel */}
       <div className="w-full lg:w-80 xl:w-96 bg-[#0a1628] border-t lg:border-t-0 lg:border-l border-gray-700 p-3 md:p-4 overflow-y-auto max-h-[40vh] lg:max-h-screen">
