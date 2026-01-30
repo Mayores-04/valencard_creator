@@ -14,8 +14,28 @@ export async function GET(req: Request) {
     const filesFromFs = exists ? await fs.promises.readdir(uploadsDir).then(files => files.map(f => `/uploads/${sessionId}/${f}`)) : [];
     const filesFromStore = getUploads(sessionId) || [];
 
-    // Merge and dedupe, preserving filesystem URLs first
-    const merged = Array.from(new Set([...filesFromFs, ...filesFromStore]));
+    // Try Cloudinary listing when credentials are available
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+    let cloudinaryFiles: string[] = [];
+    if (CLOUD_NAME && API_KEY && API_SECRET) {
+      try {
+        // Use admin resources listing with basic auth
+        const auth = Buffer.from(`${API_KEY}:${API_SECRET}`).toString('base64');
+        const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/resources/image/upload?prefix=${encodeURIComponent(sessionId)}&max_results=100`, {
+          headers: { Authorization: `Basic ${auth}` }
+        });
+        const json = await resp.json();
+        if (json?.resources && Array.isArray(json.resources)) {
+          cloudinaryFiles = json.resources.map((r: any) => r.secure_url).filter(Boolean);
+        }
+      } catch (e) {
+        console.warn('[api/uploads] cloudinary list failed', String(e));
+      }
+    }
+
+    const merged = Array.from(new Set([...filesFromFs, ...filesFromStore, ...cloudinaryFiles]));
     return NextResponse.json({ files: merged });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

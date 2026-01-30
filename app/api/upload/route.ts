@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import { addUpload } from '../uploadStore';
 import { addUpload } from '../uploadStore';
 
 export async function POST(req: Request) {
@@ -14,6 +16,41 @@ export async function POST(req: Request) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
+
+    // If Cloudinary creds are present, upload to Cloudinary and return the secure URL
+    const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+    const API_KEY = process.env.CLOUDINARY_API_KEY;
+    const API_SECRET = process.env.CLOUDINARY_API_SECRET;
+    if (CLOUD_NAME && API_KEY && API_SECRET) {
+      try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        // sign folder and timestamp
+        const paramsToSign = `folder=${session}&timestamp=${timestamp}`;
+        const signature = crypto.createHash('sha1').update(paramsToSign + API_SECRET).digest('hex');
+        const dataUrl = `data:${(file as any)?.type || 'image/png'};base64,${buffer.toString('base64')}`;
+
+        const formData = new FormData();
+        formData.append('file', dataUrl);
+        formData.append('folder', session);
+        formData.append('timestamp', String(timestamp));
+        formData.append('api_key', API_KEY);
+        formData.append('signature', signature);
+
+        const resp = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+          method: 'POST',
+          body: formData as any,
+        });
+        const json = await resp.json();
+        if (json?.secure_url) {
+          try { addUpload(session!, json.secure_url); } catch (e) { /* ignore */ }
+          return NextResponse.json({ ok: true, url: json.secure_url });
+        }
+        // if Cloudinary upload failed, fall through to filesystem attempt
+        console.warn('[api/upload] cloudinary upload failed', json);
+      } catch (e) {
+        console.warn('[api/upload] cloudinary upload exception', String(e));
+      }
+    }
 
     const uploadsDir = path.join(process.cwd(), 'public', 'uploads', session);
     try {
