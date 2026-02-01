@@ -58,7 +58,7 @@ export default function Home() {
               onClick={handleBackToTemplates}
               className="px-3 sm:px-4 py-2 bg-gradient-to-r from-[#ec4899] to-[#26C4E1] text-white rounded-lg hover:opacity-90 transition font-medium text-sm whitespace-nowrap"
             >
-              ← Back
+              Back
             </button>
 
             {/* Center: Title */}

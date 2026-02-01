@@ -1337,7 +1337,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
 
   /* Hide Tools - Mobile View */
   
-  const [toolHidden, isToolHidden] = useState(false);
+  const [toolHidden, isToolHidden] = useState(true);
 
   const hideTools = () => {
     isToolHidden(true);
@@ -1346,7 +1346,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
     isToolHidden(false);
   }
 
-  const toolVisibilityState = `absolute ${toolHidden ? 'hidden' : 'w-full'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-100`;
+  const toolVisibilityState = `absolute ${toolHidden ? 'hidden lg:visible' : 'visible'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-100`;
  
  
   return (
@@ -1521,7 +1521,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       </div>
     
       {/* Canvas */}
-      <div className={`w-full ${!toolHidden && 'lg:flex-1'} relative overflow-auto`} style={{ padding: `${toolHidden ? 0 : 100 * zoom}px` }}>
+      <div className={`w-full ${!toolHidden ? 'hidden lg:bl' : 'visible'} relative overflow-auto`} style={{ padding: `${toolHidden ? 0 : 100 * zoom}px` }}>
         <div className="flex items-center justify-center" style={{ minHeight: '100%', minWidth: '100%', position: 'relative', zIndex: 0 }}>
           <div className="relative" style={{ width: `${600 * zoom}px`, height: `${800 * zoom}px`, flexShrink: 0 }}>
             <div
