@@ -11,7 +11,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import {
-  Heart, Star, Sparkles, Music, Coffee, Gift, Crown, Cake, Flower2, Sun, Moon, Cloud, Type, Check, ChevronDown, Upload, Image as ImageIcon, Copy, MoveUp, MoveDown, ArrowUpToLine, ArrowDownToLine, Trash2, MoreVertical, Download, Mail, RotateCw
+  Heart, Star, Sparkles, Music, Coffee, Gift, Crown, Cake, Flower2, Sun, Moon, Cloud, Type, Check, ChevronDown, Upload, Image as ImageIcon, Copy, MoveUp, MoveDown, ArrowUpToLine, ArrowDownToLine, Trash2, MoreVertical, Download, Mail, RotateCw, X
 } from 'lucide-react';
 import { Template } from '@/app/templates/templateData';
 import { 
@@ -1312,7 +1312,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   // Render dropdown menu
   const renderDropdownMenu = useCallback((id: string, type: ElementType) => (
     <DropdownMenu.Portal>
-      <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
+      <DropdownMenu.Content className="min-w-[160px] bg-white text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
         <DropdownMenu.Item
           className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#26C4E1]/10 rounded flex items-center gap-2"
           onSelect={() => copyElement(id, type)}
@@ -1355,13 +1355,31 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
     </DropdownMenu.Portal>
   ), [copyElement, bringToFront, bringForward, sendBackward, sendToBack, deleteElement]);
 
+  /* Hide Tools - Mobile View */
+  
+  const [toolHidden, isToolHidden] = useState(true);
+
+  const hideTools = () => {
+    isToolHidden(true);
+  }
+  const showTools = () => {
+    isToolHidden(false);
+  }
+
+  const toolVisibilityState = `absolute ${toolHidden ? 'hidden lg:visible' : 'visible'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-100`;
+ 
+ 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d] overflow-hidden">
+    <div className="absolute pt-17 h-full w-full flex bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d] overflow-auto">
+
       {/* Left Sidebar */}
-      <ScrollArea.Root className="w-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 max-h-[40vh] lg:max-h-screen">
-        <ScrollArea.Viewport className="w-full h-full p-3 md:p-4">
-          <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#26C4E1] bg-clip-text text-transparent">Tools</h2>
-          
+      <ScrollArea.Root className={toolVisibilityState}>
+        <ScrollArea.Viewport className="w-full h-full p-4">
+          <div className="flex w-full justify-between items-center mb-6">
+            <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#26C4E1] bg-clip-text text-transparent">Tools</h2>
+            <ChevronDown className="visible lg:hidden" onClick={hideTools}/>
+          </div>
+
           <Tabs.Root defaultValue="stickers" className="w-full">
             <Tabs.List className="grid grid-cols-2 md:grid-cols-2 gap-1.5 md:gap-2 mb-3 md:mb-4">
               <Tabs.Trigger value="stickers" className="px-3 py-2 rounded-md text-sm font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#ec4899] data-[state=active]:to-[#f472b6] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(236,72,153,0.5)] data-[state=inactive]:bg-[#0a1628] data-[state=inactive]:text-gray-300">
@@ -1378,7 +1396,8 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
               </Tabs.Trigger>
             </Tabs.List>
 
-            <Tabs.Content value="stickers" className="outline-none">
+            {/* Stickers */}
+            <Tabs.Content value="stickers" className="relative outline-none overflow-auto max-h-full h-full">
               <div className="mb-4">
                 <h3 className="font-semibold mb-3 text-gray-300">Stickers</h3>
                 <StickerGrid stickers={alphaStickers} type="alpha" onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
@@ -1517,23 +1536,28 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
         </ScrollArea.Scrollbar>
       </ScrollArea.Root>
 
+      <div className={`${toolHidden ? 'fixed' : 'hidden'} left-0 mx-2 lg:hidden my-1 flex items-start z-50 bg-[#1a2332] rounded-md p-2 shadow-lg border border-gray-700`} onClick={() => showTools()}>
+        <span className="p-2 text-xs font-semibold text-gray-100">Tools</span>
+      </div>
+    
       {/* Canvas */}
-      <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8 overflow-auto relative">
-        <div className="relative" style={{ width: `${600 * zoom}px`, height: `${800 * zoom}px` }}>
-        <div
-          ref={canvasRef}
-          onDrop={handleDrop}
-          onDragOver={(e) => e.preventDefault()}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={clearSelection}
-          className="relative shadow-2xl"
-          style={{
-            width: '600px',
-            height: '800px',
-            transform: `scale(${zoom})`,
-            transformOrigin: 'top left',
+      <div className={`w-full ${!toolHidden ? 'hidden lg:bl' : 'visible'} relative overflow-auto`} style={{ padding: `${toolHidden ? 0 : 100 * zoom}px` }}>
+        <div className="flex items-center justify-center" style={{ minHeight: '100%', minWidth: '100%', position: 'relative', zIndex: 0 }}>
+          <div className="relative" style={{ width: `${600 * zoom}px`, height: `${800 * zoom}px`, flexShrink: 0 }}>
+            <div
+              ref={canvasRef}
+              onDrop={handleDrop}
+              onDragOver={(e) => e.preventDefault()}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onClick={clearSelection}
+              className="relative shadow-2xl"
+              style={{
+                width: '600px',
+                height: '800px',
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
             backgroundImage: background.includes('gradient') ? background : background.startsWith('data:image/svg') ? `url("${background}")` : background.includes('url') && !background.startsWith('url(https') ? background : background.startsWith('/templates/') ? `url("${background}")` : 'none',
             backgroundColor: background.startsWith('#') || background.startsWith('rgb') ? background : background.startsWith('url(https') || background.startsWith('data:image/svg') || background.startsWith('/templates/') ? 'transparent' : '#ffffff',
             backgroundSize: '100% 100%',
@@ -1773,21 +1797,8 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
               </div>
             );
           })}
-        </div>
-        <div className="absolute left-full top-0 ml-2 md:ml-3 h-full hidden xl:flex items-start">
-          <LayersPanel
-            layers={layersForPanel}
-            selectedId={selectedSticker || selectedText || selectedImageId}
-            onSelect={selectElement}
-            onBringForward={bringForward}
-            onSendBackward={sendBackward}
-            onBringToFront={bringToFront}
-            onSendToBack={sendToBack}
-            onDelete={deleteElement}
-            onToggleHidden={toggleHidden}
-            onReorder={handleReorderLayers}
-          />
-        </div>
+            </div>
+          </div>
         </div>
       </div>
       {/* Crop modal */}
@@ -1852,16 +1863,16 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
       )}
 
       {/* Right Panel */}
-      <div className="w-full lg:w-80 xl:w-96 bg-[#0a1628] border-t lg:border-t-0 lg:border-l border-gray-700 p-3 md:p-4 overflow-y-auto max-h-[40vh] lg:max-h-screen">
+      <div className="hidden lg:visible w-full lg:w-80 xl:w-96 bg-[#0a1628] border-t lg:border-t-0 lg:border-l border-gray-700 p-3 md:p-4 overflow-y-auto max-h-[40vh] lg:max-h-screen">
         <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#26C4E1] bg-clip-text text-transparent">Properties</h2>
-        {/* <div className="space-y-1.5 md:space-y-2 mb-3 md:mb-4">
+           <div className="space-y-1.5 md:space-y-2 mb-3 md:mb-4">
           <Button onClick={handleDownloadImage} disabled={exporting} className="w-full text-sm md:text-base" size="lg">
             <Download className="w-3 h-3 md:w-4 md:h-4" /> {exporting ? 'Preparing...' : 'Download PNG'}
           </Button>
           <Button onClick={handleOpenGmailModal} disabled={exporting} variant="outline" className="w-full text-sm md:text-base" size="lg">
             <Mail className="w-3 h-3 md:w-4 md:h-4" /> Send via Gmail
           </Button>
-        </div> */}
+        </div>
 
         {gmailModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -2328,6 +2339,21 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
           </div>
         )}
       </div>
+
+        <div className="fixed right-0 mx-3 lg:mx-5 my-1 xl:flex items-start">
+          <LayersPanel
+            layers={layersForPanel}
+            selectedId={selectedSticker || selectedText || selectedImageId}
+            onSelect={selectElement}
+            onBringForward={bringForward}
+            onSendBackward={sendBackward}
+            onBringToFront={bringToFront}
+            onSendToBack={sendToBack}
+            onDelete={deleteElement}
+            onToggleHidden={toggleHidden}
+            onReorder={handleReorderLayers}
+          />
+        </div>
     </div>
   );
   }
