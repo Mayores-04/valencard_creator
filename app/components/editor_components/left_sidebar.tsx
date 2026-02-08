@@ -100,7 +100,7 @@ export function LeftSidebar({
   const [toolHidden, isToolHidden] = useState(true);
 
   const hideTools = () => {
-    isToolHidden(true);
+    isToolHidden(false);
     toolMinimized = true;
     onToolMinimizedChange?.(true);
   };
@@ -116,7 +116,7 @@ export function LeftSidebar({
     [selectedImageId, userImages]
   );
 
-  const toolVisibilityState = `absolute ${toolHidden ? 'hidden lg:visible' : 'visible'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-10`;
+  const toolVisibilityState = `absolute ${toolHidden ? 'hidden lg:visible' : 'visible'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-100`;
 
   return (
     <>

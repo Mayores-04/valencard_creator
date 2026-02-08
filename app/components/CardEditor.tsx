@@ -100,9 +100,21 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const cropImageRef = useRef<HTMLImageElement | null>(null);
   const [cropRect, setCropRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const cropStateRef = useRef<{ dragging: boolean; startX: number; startY: number } | null>(null);
-  
+  const [isLgScreen, setIsLgScreen] = useState(typeof window !== 'undefined' && window.innerWidth >= 1024);
+  const [toolMinimizedState, setToolMinimizedState] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const zoom = externalZoom;
+
+  // Track screen size changes
+  useEffect(() => {
+    const handleResize = () => {
+      setIsLgScreen(window.innerWidth >= 1024);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Initialize history with initial state
   useEffect(() => {
@@ -1293,7 +1305,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
 
   // Render dropdown menu
   const renderDropdownMenu = useCallback((id: string, type: ElementType) => (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root open={isDropdownOpen} onOpenChange={() => setIsDropdownOpen(true)}>
       <DropdownMenu.Trigger asChild>
         <button className="p-1 hover:bg-gray-700 rounded">
           <MoreVertical className="w-4 h-4" />
@@ -1342,11 +1354,12 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  ), [copyElement, bringToFront, bringForward, sendBackward, sendToBack, deleteElement]);
+  ), [copyElement, bringToFront, bringForward, sendBackward, sendToBack, deleteElement, isDropdownOpen, setIsDropdownOpen]);
 
   return (
-    <div className="absolute pt-17 h-full w-full flex bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d] overflow-auto">
- 
+    <div className={`pt-17 w-full flex bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d] ${isDropdownOpen ? 'overflow-visible h-0' : 'overflow-hidden absolute h-full'}`} >
+    {/* main container div above */}  
+
       {/* Left Sidebar Component */}
       <LeftSidebar.LeftSidebar
         selectedImageId={selectedImageId}
@@ -1376,10 +1389,11 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
         setIsCropping={setIsCropping}
         setCropRect={setCropRect}
         setUserImages={setUserImages}
+        onToolMinimizedChange={setToolMinimizedState}
       />
     
       {/* Canvas */}
-      <div className={`w-full ${LeftSidebar.toolMinimized ? 'hidden lg:block' : 'visible'}} relative overflow-auto`} style={{ padding: `${LeftSidebar.toolMinimized ? 0   : 100 * zoom}px` }}>
+      <div className={`w-full ${toolMinimizedState ? 'visible' : 'hidden lg:block'} relative overflow-auto`} style={{ padding: `${toolMinimizedState || isLgScreen ? 100 * zoom : 0}px` }}>
         <div className="flex items-center justify-center" style={{ minHeight: '100%', minWidth: '100%', position: 'relative', zIndex: 0 }}>
           <div className="relative" style={{ width: `${600 * zoom}px`, height: `${800 * zoom}px`, flexShrink: 0 }}>
             <div
