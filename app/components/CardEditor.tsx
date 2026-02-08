@@ -28,6 +28,7 @@ import {
   TextControls,
   ImageUploadPanel
 } from '@/app/components/card';
+
 import LayersPanel from '@/app/components/card/LayersPanel_fixed';
 import {
   alphaStickers,
@@ -40,6 +41,9 @@ import {
   fontFamilies,
   textTemplates,
 } from '@/app/data';
+
+import * as LeftSidebar from './card/LeftSidebar';
+import { RightPanel } from './card/RightPanel';
 
 interface CardEditorProps {
   template: string | null;
@@ -154,8 +158,6 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
   const saveToHistory = useCallback(() => {
     setShouldSaveHistory(true);
   }, []);
-
-  
 
   // Undo function
   const undo = useCallback(() => {
@@ -536,7 +538,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
     setSelectedImageId(type === 'image' ? id : null);
   }, []);
 
-  // Remote upload session for phone -> desktop insert (moved after selectElement to avoid TDZ)
+  // Remote upload session fonpr phone -> desktop insert (moved after selectElement to avoid TDZ)
   const createUploadSession = useCallback(() => {
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
     setUploadSessionId(id);
@@ -1291,237 +1293,93 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
 
   // Render dropdown menu
   const renderDropdownMenu = useCallback((id: string, type: ElementType) => (
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content className="min-w-[160px] bg-white text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#26C4E1]/10 rounded flex items-center gap-2"
-          onSelect={() => copyElement(id, type)}
-        >
-          <Copy className="w-4 h-4 text-[#26C4E1]" /> Copy
-        </DropdownMenu.Item>
-        <DropdownMenu.Separator className="h-px bg-gray-700 my-1" />
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-          onSelect={() => bringToFront(id, type)}
-        >
-          <ArrowUpToLine className="w-4 h-4 text-[#a855f7]" /> Bring to Front
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-          onSelect={() => bringForward(id, type)}
-        >
-          <MoveUp className="w-4 h-4 text-[#a855f7]" /> Bring Forward
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-          onSelect={() => sendBackward(id, type)}
-        >
-          <MoveDown className="w-4 h-4 text-[#a855f7]" /> Send Backward
-        </DropdownMenu.Item>
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-          onSelect={() => sendToBack(id, type)}
-        >
-          <ArrowDownToLine className="w-4 h-4 text-[#a855f7]" /> Send to Back
-        </DropdownMenu.Item>
-        <DropdownMenu.Separator className="h-px bg-gray-700 my-1" />
-        <DropdownMenu.Item
-          className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-red-900/20 rounded flex items-center gap-2 text-red-400"
-          onSelect={() => deleteElement(id, type)}
-        >
-          <Trash2 className="w-4 h-4" /> Delete
-        </DropdownMenu.Item>
-      </DropdownMenu.Content>
-    </DropdownMenu.Portal>
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <button className="p-1 hover:bg-gray-700 rounded">
+          <MoreVertical className="w-4 h-4" />
+        </button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#26C4E1]/10 rounded flex items-center gap-2"
+            onSelect={() => copyElement(id, type)}
+          >
+            <Copy className="w-4 h-4 text-[#26C4E1]" /> Copy
+          </DropdownMenu.Item>
+          <DropdownMenu.Separator className="h-px bg-gray-700 my-1" />
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
+            onSelect={() => bringToFront(id, type)}
+          >
+            <ArrowUpToLine className="w-4 h-4 text-[#a855f7]" /> Bring to Front
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
+            onSelect={() => bringForward(id, type)}
+          >
+            <MoveUp className="w-4 h-4 text-[#a855f7]" /> Bring Forward
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
+            onSelect={() => sendBackward(id, type)}
+          >
+            <MoveDown className="w-4 h-4 text-[#a855f7]" /> Send Backward
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
+            onSelect={() => sendToBack(id, type)}
+          >
+            <ArrowDownToLine className="w-4 h-4 text-[#a855f7]" /> Send to Back
+          </DropdownMenu.Item>
+          <DropdownMenu.Separator className="h-px bg-gray-700 my-1" />
+          <DropdownMenu.Item
+            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-red-900/20 rounded flex items-center gap-2 text-red-400"
+            onSelect={() => deleteElement(id, type)}
+          >
+            <Trash2 className="w-4 h-4" /> Delete
+          </DropdownMenu.Item>
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
   ), [copyElement, bringToFront, bringForward, sendBackward, sendToBack, deleteElement]);
 
-  /* Hide Tools - Mobile View */
-  
-  const [toolHidden, isToolHidden] = useState(true);
-
-  const hideTools = () => {
-    isToolHidden(true);
-  }
-  const showTools = () => {
-    isToolHidden(false);
-  }
-
-  const toolVisibilityState = `absolute ${toolHidden ? 'hidden lg:visible' : 'visible'} lg:flex w-full h-full lg:w-72 lg:max-w-xs bg-[#1a2332] border-b lg:border-b-0 lg:border-r border-gray-700 z-100`;
- 
- 
   return (
     <div className="absolute pt-17 h-full w-full flex bg-gradient-to-br from-[#0a1628] via-[#1a2332] to-[#0f1b2d] overflow-auto">
-
-      {/* Left Sidebar */}
-      <ScrollArea.Root className={toolVisibilityState}>
-        <ScrollArea.Viewport className="w-full h-full p-4">
-          <div className="flex w-full justify-between items-center mb-6">
-            <h2 className="text-lg md:text-xl font-bold bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#26C4E1] bg-clip-text text-transparent">Tools</h2>
-            <ChevronDown className="visible lg:hidden" onClick={hideTools}/>
-          </div>
-
-          <Tabs.Root defaultValue="stickers" className="w-full">
-            <Tabs.List className="grid grid-cols-2 md:grid-cols-2 gap-1.5 md:gap-2 mb-3 md:mb-4">
-              <Tabs.Trigger value="stickers" className="px-3 py-2 rounded-md text-sm font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#ec4899] data-[state=active]:to-[#f472b6] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(236,72,153,0.5)] data-[state=inactive]:bg-[#0a1628] data-[state=inactive]:text-gray-300">
-                Stickers
-              </Tabs.Trigger>
-              <Tabs.Trigger value="image" className="px-3 py-2 rounded-md text-sm font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#fbbf24] data-[state=active]:to-[#f59e0b] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(251,191,36,0.5)] data-[state=inactive]:bg-[#0a1628] data-[state=inactive]:text-gray-300">
-                Image
-              </Tabs.Trigger>
-              <Tabs.Trigger value="text" className="px-3 py-2 rounded-md text-sm font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#26C4E1] data-[state=active]:to-[#60a5fa] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(38,196,225,0.5)] data-[state=inactive]:bg-[#0a1628] data-[state=inactive]:text-gray-300">
-                Text
-              </Tabs.Trigger>
-              <Tabs.Trigger value="background" className="px-3 py-2 rounded-md text-sm font-medium transition-all data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#a855f7] data-[state=active]:to-[#c084fc] data-[state=active]:text-white data-[state=active]:shadow-[0_0_20px_rgba(168,85,247,0.5)] data-[state=inactive]:bg-[#0a1628] data-[state=inactive]:text-gray-300">
-                BG
-              </Tabs.Trigger>
-            </Tabs.List>
-
-            {/* Stickers */}
-            <Tabs.Content value="stickers" className="relative outline-none overflow-auto max-h-full h-full">
-              <div className="mb-4">
-                <h3 className="font-semibold mb-3 text-gray-300">Stickers</h3>
-                <StickerGrid stickers={alphaStickers} type="alpha" onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
-                <Separator.Root className="my-4 h-px bg-gray-700" />
-                <StickerGrid stickers={loveStickers} type="emoji" onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
-                <Separator.Root className="my-4 h-px bg-gray-700" />
-                <h3 className="font-semibold mb-3 text-gray-300">Icon Stickers</h3>
-                <StickerGrid stickers={[]} type="icon" iconData={iconStickers} onStickerClick={addSticker} onDragStart={handleSidebarDragStart} />
-              </div>
-            </Tabs.Content>
-
-            <Tabs.Content value="image" className="outline-none">
-              <ImageUploadPanel
-                userImage={selectedImage?.src || null}
-                imageShape={selectedImage?.shape || 'rectangle'}
-                fileInputRef={fileInputRef}
-                hasImageArea={true}
-                onImageUpload={handleImageUpload}
-                onImageRemove={() => selectedImageId && deleteElement(selectedImageId, 'image')}
-                onShapeChange={(shape) => selectedImageId && setUserImages(prev => prev.map(img => img.id === selectedImageId ? { ...img, shape } : img))}
-              />
-
-              {selectedImageId && (
-                <div className="mt-3 flex gap-2">
-                  <Button size="sm" onClick={() => {
-                    setCroppingImageId(selectedImageId);
-                    setIsCropping(true);
-                    setCropRect(null);
-                  }}>Crop</Button>
-                </div>
-              )}
-
-              <div className="mt-4 p-3 border border-gray-700 rounded bg-[#071028]">
-                <h3 className="font-semibold mb-2 text-gray-300">Insert from Phone (Scan QR)</h3>
-                {!uploadSessionId ? (
-                  <div className="flex flex-col gap-2">
-                    <Button onClick={() => { const s = createUploadSession(); startPolling(s); }} size="sm">Create Session & QR</Button>
-                    {/* <Button onClick={() => { const s = createUploadSession(); navigator.clipboard?.writeText(`${location.origin}/upload/${s}`); startPolling(s); }} variant="outline" size="sm">Create + Copy URL</Button> */}
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex flex-col items-center gap-3">
-                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(`${location.origin}/upload/${uploadSessionId}`)}`} alt="QR" />
-                      <div>
-                        <div className="text-sm text-gray-300">Open this on your phone:</div>
-                        <a className="text-xs text-cyan-300 break-all" href={`/upload/${uploadSessionId}`} target="_blank" rel="noreferrer">{`${location.origin}/upload/${uploadSessionId}`}</a>
-                        <div className="mt-2 flex gap-2">
-                          <Button onClick={() => navigator.clipboard?.writeText(`${location.origin}/upload/${uploadSessionId}`)} size="sm">Copy URL</Button>
-                          {/* <Button onClick={() => { stopPolling(); setUploadSessionId(null); }} variant="destructive" size="sm">Stop</Button> */}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-3 text-xs text-gray-400">New uploads will automatically appear on the canvas.</div>
-                    {/* <div className="mt-3 text-xs text-gray-300">
-                      <div className="font-medium">Debug — last polled uploads:</div>
-                      {lastPolledFiles.length === 0 ? (
-                        <div className="text-xs text-gray-400">(no files returned yet)</div>
-                      ) : (
-                        <ul className="text-xs break-all mt-1">
-                          {lastPolledFiles.map((f, i) => (
-                            <li key={i} className="mt-1"><a href={f} target="_blank" rel="noreferrer" className="text-cyan-300">{f}</a></li>
-                          ))}
-                        </ul>
-                      )}
-                      {lastPolledDebug && (
-                        <div className="mt-2 text-xs text-gray-400">
-                          <div className="font-medium">Debug details:</div>
-                          <pre className="text-xs whitespace-pre-wrap break-all mt-1">{JSON.stringify(lastPolledDebug, null, 2)}</pre>
-                        </div>
-                      )}
-                    </div> */}
-                  </div>
-                )}
-                
-              </div>
-            </Tabs.Content>
-
-            <Tabs.Content value="text" className="outline-none">
-              <Button onClick={addText} className="w-full mb-4" size="lg">
-                <Type size={18} /> Add Custom Text
-              </Button>
-              <Separator.Root className="my-4 h-px bg-gray-700" />
-              <h3 className="font-semibold mb-3 text-gray-300">Text Templates</h3>
-              <div className="grid grid-cols-1 gap-2 mb-4">
-                {textTemplates.map((template, index) => (
-                  <Button
-                    key={index}
-                    onClick={() => addTextTemplate(template)}
-                    variant="outline"
-                    className="text-left justify-start h-auto py-3 border-gray-600 hover:border-[#26C4E1]"
-                    style={{ fontFamily: template.fontFamily, color: template.color, fontSize: '18px' }}
-                  >
-                    {template.text}
-                  </Button>
-                ))}
-              </div>
-              <Separator.Root className="my-4 h-px bg-gray-700" />
-              <TextControls
-                selectedTextId={selectedText || ''}
-                textElement={textElements.find(t => t.id === selectedText)}
-                fontFamilies={fontFamilies}
-                onFontChange={updateTextFont}
-                onColorChange={updateTextColor}
-                onSizeChange={updateTextSize}
-              />
-            </Tabs.Content>
-
-            <Tabs.Content value="background" className="outline-none">
-              <BackgroundSelector
-                currentBackground={background}
-                onBackgroundChange={setBackground}
-                solidColors={solidColors}
-                gradients={gradients}
-                patterns={patterns}
-                backgroundImages={backgroundImages}
-              />
-              <Separator.Root className="my-4 h-px bg-gray-700" />
-              <h3 className="font-semibold mb-3 text-gray-300">Custom Color</h3>
-              <Input
-                type="color"
-                value={background.startsWith('#') ? background : '#ffffff'}
-                onChange={(e) => setBackground(e.target.value)}
-                onBlur={() => saveToHistory()}
-                className="w-full h-12 cursor-pointer"
-              />
-            </Tabs.Content>
-          </Tabs.Root>
-
-          <Separator.Root className="my-3 md:my-4 h-px bg-gray-700" />
-          <Button onClick={deleteSelected} disabled={!selectedSticker && !selectedText && !selectedImageId} variant="destructive" className="w-full text-sm md:text-base" size="lg">
-            Delete Selected
-          </Button>
-        </ScrollArea.Viewport>
-        <ScrollArea.Scrollbar className="flex select-none touch-none p-0.5 bg-[#0a1628] data-[orientation=vertical]:w-2.5" orientation="vertical">
-          <ScrollArea.Thumb className="flex-1 bg-gradient-to-b from-[#26C4E1] to-[#60a5fa] rounded-lg" />
-        </ScrollArea.Scrollbar>
-      </ScrollArea.Root>
-
-      <div className={`${toolHidden ? 'fixed' : 'hidden'} left-0 mx-2 lg:hidden my-1 flex items-start z-50 bg-[#1a2332] rounded-md p-2 shadow-lg border border-gray-700`} onClick={() => showTools()}>
-        <span className="p-2 text-xs font-semibold text-gray-100">Tools</span>
-      </div>
+ 
+      {/* Left Sidebar Component */}
+      <LeftSidebar.LeftSidebar
+        selectedImageId={selectedImageId}
+        selectedText={selectedText}
+        selectedSticker={selectedSticker}
+        userImages={userImages}
+        textElements={textElements}
+        background={background}
+        uploadSessionId={uploadSessionId}
+        lastPolledFiles={lastPolledFiles}
+        lastPolledDebug={lastPolledDebug}
+        fileInputRef={fileInputRef}
+        addSticker={addSticker}
+        addText={addText}
+        addTextTemplate={addTextTemplate}
+        handleSidebarDragStart={handleSidebarDragStart}
+        handleImageUpload={handleImageUpload}
+        deleteElement={deleteElement}
+        deleteSelected={deleteSelected}
+        setBackground={setBackground}
+        updateTextFont={updateTextFont}
+        updateTextColor={updateTextColor}
+        updateTextSize={updateTextSize}
+        createUploadSession={createUploadSession}
+        startPolling={startPolling}
+        setCroppingImageId={setCroppingImageId}
+        setIsCropping={setIsCropping}
+        setCropRect={setCropRect}
+        setUserImages={setUserImages}
+      />
     
       {/* Canvas */}
-      <div className={`w-full ${!toolHidden ? 'hidden lg:bl' : 'visible'} relative overflow-auto`} style={{ padding: `${toolHidden ? 0 : 100 * zoom}px` }}>
+      <div className={`w-full ${LeftSidebar.toolMinimized ? 'hidden lg:block' : 'visible'}} relative overflow-auto`} style={{ padding: `${LeftSidebar.toolMinimized ? 0   : 100 * zoom}px` }}>
         <div className="flex items-center justify-center" style={{ minHeight: '100%', minWidth: '100%', position: 'relative', zIndex: 0 }}>
           <div className="relative" style={{ width: `${600 * zoom}px`, height: `${800 * zoom}px`, flexShrink: 0 }}>
             <div
@@ -1781,6 +1639,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
           </div>
         </div>
       </div>
+      
       {/* Crop modal */}
       {isCropping && croppingImageId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -1802,7 +1661,7 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
               }}
               onMouseUp={() => { if (cropStateRef.current) cropStateRef.current.dragging = false; }}
             >
-              <img ref={cropImageRef as any} src={userImages.find(u => u.id === croppingImageId)?.src} alt="to-crop" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              <img ref={ cropImageRef as any} src={userImages.find(u => u.id === croppingImageId)?.src} alt="to-crop" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
               {cropRect && (
                 <div style={{ position: 'absolute', left: cropRect.x, top: cropRect.y, width: cropRect.w, height: cropRect.h, border: '2px dashed #60a5fa', background: 'rgba(96,165,250,0.08)' }} />
               )}
@@ -1842,485 +1701,36 @@ export default function CardEditor({ template, templateData, zoom: externalZoom 
         </div>
       )}
 
-      {/* Right Panel */}
-      <div className="hidden lg:visible w-full lg:w-80 xl:w-96 bg-[#0a1628] border-t lg:border-t-0 lg:border-l border-gray-700 p-3 md:p-4 overflow-y-auto max-h-[40vh] lg:max-h-screen">
-        <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-[#ec4899] via-[#a855f7] to-[#26C4E1] bg-clip-text text-transparent">Properties</h2>
-           <div className="space-y-1.5 md:space-y-2 mb-3 md:mb-4">
-          <Button onClick={handleDownloadImage} disabled={exporting} className="w-full text-sm md:text-base" size="lg">
-            <Download className="w-3 h-3 md:w-4 md:h-4" /> {exporting ? 'Preparing...' : 'Download PNG'}
-          </Button>
-          <Button onClick={handleOpenGmailModal} disabled={exporting} variant="outline" className="w-full text-sm md:text-base" size="lg">
-            <Mail className="w-3 h-3 md:w-4 md:h-4" /> Send via Gmail
-          </Button>
-        </div>
+      {/* Right Panel Component */}
+      <RightPanel
+        selectedSticker={selectedSticker}
+        selectedText={selectedText}
+        selectedImageId={selectedImageId}
+        stickers={stickers}
+        textElements={textElements}
+        userImages={userImages}
+        exporting={exporting}
+        gmailModalOpen={gmailModalOpen}
+        recipientEmail={recipientEmail}
+        emailSubject={emailSubject}
+        emailBody={emailBody}
+        sendingEmail={sendingEmail}
+        setStickers={setStickers}
+        setTextElements={setTextElements}
+        setUserImages={setUserImages}
+        setGmailModalOpen={setGmailModalOpen}
+        setRecipientEmail={setRecipientEmail}
+        setEmailSubject={setEmailSubject}
+        setEmailBody={setEmailBody}
+        handleDownloadImage={handleDownloadImage}
+        handleOpenGmailModal={handleOpenGmailModal}
+        handleSendViaSmtp={handleSendViaSmtp}
+        handleSendViaGmailOAuth={handleSendViaGmailOAuth}
+        saveToHistory={saveToHistory}
+      />
 
-        {gmailModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="w-full max-w-lg bg-[#0b1220] border border-gray-700 rounded-lg p-4 md:p-6 shadow-lg">
-              <h3 className="text-base md:text-lg font-semibold mb-3 md:mb-4 text-gray-100">Send Card via Gmail</h3>
-              <div className="space-y-2 md:space-y-3 mb-3 md:mb-4">
-                <input className="w-full p-2 rounded bg-[#071028] text-sm md:text-base text-gray-100 border border-gray-700" placeholder="Recipient email" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} />
-                <input className="w-full p-2 rounded bg-[#071028] text-sm md:text-base text-gray-100 border border-gray-700" placeholder="Subject" value={emailSubject} onChange={(e) => setEmailSubject(e.target.value)} />
-                <textarea className="w-full p-2 rounded bg-[#071028] text-sm md:text-base text-gray-100 border border-gray-700" rows={4} value={emailBody} onChange={(e) => setEmailBody(e.target.value)} />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="ghost" onClick={() => setGmailModalOpen(false)} className="text-sm md:text-base">Cancel</Button>
-                <Button onClick={handleSendViaSmtp} disabled={sendingEmail || !recipientEmail} className="text-sm md:text-base">
-                  {sendingEmail ? 'Sending…' : 'Send '}
-                </Button>
-                {/* <Button onClick={handleSendViaGmailOAuth} disabled={sendingEmail || !recipientEmail} variant="outline">
-                  {sendingEmail ? 'Sending…' : 'Authorize & Send (Gmail API)'}
-                </Button> */}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {selectedStickerData && (
-          <div>
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Position</h3>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-3 md:mb-4">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">X Position</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedStickerData.x)}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, x: Number(e.target.value) } : s))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Y Position</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedStickerData.y)}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, y: Number(e.target.value) } : s))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Sticker Shape</h3>
-            <ShapeSelector selectedShape={selectedStickerData.shape || 'rectangle'} onShapeChange={(shape) => updateStickerShape(selectedStickerData.id, shape)} />
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Size</h3>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-1.5 md:mb-2">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Width</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedStickerData.width)}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, width: Number(e.target.value) } : s))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Height</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedStickerData.height)}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, height: Number(e.target.value) } : s))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-            </div>
-            <Slider.Root className="relative flex items-center w-full h-5 mb-2" value={[selectedStickerData.width]} onValueChange={(value) => {
-              const newSize = value[0];
-              const aspectRatio = selectedStickerData.width / selectedStickerData.height;
-              setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, width: newSize, height: newSize / aspectRatio } : s));
-            }} max={300} min={30}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#26C4E1] to-[#60a5fa] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#26C4E1] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>Small</span>
-              <span className="text-[#26C4E1]">{Math.round(selectedStickerData.width)}px</span>
-              <span>Large</span>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Rotation</h3>
-            <div className="mb-1.5 md:mb-2">
-              <Input
-                type="number"
-                value={Math.round(selectedStickerData.rotation)}
-                onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, rotation: Number(e.target.value) } : s))}
-                className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                min={0}
-                max={360}
-              />
-            </div>
-            <Slider.Root className="relative flex items-center w-full h-5" value={[selectedStickerData.rotation]} onValueChange={(value) => {
-              setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, rotation: value[0] } : s));
-            }} onValueCommit={() => saveToHistory()} max={360} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#ec4899] to-[#f472b6] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#ec4899] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0°</span>
-              <span className="text-[#ec4899]">{Math.round(selectedStickerData.rotation)}°</span>
-              <span>360°</span>
-            </div>
-            <Separator.Root className="my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-3 text-gray-300">Outline</h3>
-            <div className="space-y-2">
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Color</label>
-                <Input
-                  type="color"
-                  value={selectedStickerData.outlineColor || '#000000'}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, outlineColor: e.target.value } : s))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full h-10 cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Width</label>
-                <Input
-                  type="number"
-                  value={selectedStickerData.outlineWidth || 0}
-                  onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, outlineWidth: Number(e.target.value) } : s))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-                  min={0}
-                  max={10}
-                />
-                <Slider.Root className="relative flex items-center w-full h-5" value={[selectedStickerData.outlineWidth || 0]} onValueChange={(value) => {
-                  setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, outlineWidth: value[0] } : s));
-                }} max={10} min={0} step={1}>
-                  <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                    <Slider.Range className="absolute bg-gradient-to-r from-[#a855f7] to-[#c084fc] rounded-full h-full" />
-                  </Slider.Track>
-                  <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#a855f7] rounded-full" />
-                </Slider.Root>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>None</span>
-                  <span className="text-[#a855f7]">{selectedStickerData.outlineWidth || 0}px</span>
-                </div>
-              </div>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Border Radius</h3>
-            <Input
-              type="number"
-              value={selectedStickerData.borderRadius || 0}
-              onChange={(e) => setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, borderRadius: Number(e.target.value) } : s))}
-              className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-              min={0}
-              max={100}
-            />
-            <Slider.Root className="relative flex items-center w-full h-5" value={[selectedStickerData.borderRadius || 0]} onValueChange={(value) => {
-              setStickers(prev => prev.map(s => s.id === selectedStickerData.id ? { ...s, borderRadius: value[0] } : s));
-            }} max={100} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#10b981] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0px</span>
-              <span className="text-[#10b981]">{selectedStickerData.borderRadius || 0}px</span>
-              <span>100px</span>
-            </div>
-          </div>
-        )}
-
-        {selectedImage && (
-          <div>
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Position</h3>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-3 md:mb-4">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">X Position</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedImage.x)}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, x: Number(e.target.value) } : img))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Y Position</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedImage.y)}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, y: Number(e.target.value) } : img))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Image Shape</h3>
-            <ShapeSelector selectedShape={selectedImage.shape} onShapeChange={(shape) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, shape } : img))} />
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Size</h3>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-1.5 md:mb-2">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Width</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedImage.width)}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, width: Number(e.target.value) } : img))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Height</label>
-                <Input
-                  type="number"
-                  value={Math.round(selectedImage.height)}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, height: Number(e.target.value) } : img))}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-            </div>
-            <Slider.Root className="relative flex items-center w-full h-5 mb-2" value={[selectedImage.width]} onValueChange={(value) => {
-              const newWidth = value[0];
-              const aspectRatio = selectedImage.width / selectedImage.height;
-              setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, width: newWidth, height: newWidth / aspectRatio } : img));
-            }} max={600} min={50}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#26C4E1] to-[#60a5fa] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#26C4E1] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>Small</span>
-              <span className="text-[#26C4E1]">{Math.round(selectedImage.width)}px</span>
-              <span>Large</span>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Rotation</h3>
-            <div className="mb-1.5 md:mb-2">
-              <Input
-                type="number"
-                value={Math.round(selectedImage.rotation)}
-                onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, rotation: Number(e.target.value) } : img))}
-                className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                min={0}
-                max={360}
-              />
-            </div>
-            <Slider.Root className="relative flex items-center w-full h-5" value={[selectedImage.rotation]} onValueChange={(value) => {
-              setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, rotation: value[0] } : img));
-            }} onValueCommit={() => saveToHistory()} max={360} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#ec4899] to-[#f472b6] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#ec4899] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0°</span>
-              <span className="text-[#ec4899]">{Math.round(selectedImage.rotation)}°</span>
-              <span>360°</span>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Outline</h3>
-            <div className="space-y-1.5 md:space-y-2">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Color</label>
-                <Input
-                  type="color"
-                  value={selectedImage.outlineColor || '#000000'}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, outlineColor: e.target.value } : img))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full h-10 cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Width</label>
-                <Input
-                  type="number"
-                  value={selectedImage.outlineWidth || 0}
-                  onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, outlineWidth: Number(e.target.value) } : img))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-                  min={0}
-                  max={10}
-                />
-                <Slider.Root className="relative flex items-center w-full h-5" value={[selectedImage.outlineWidth || 0]} onValueChange={(value) => {
-                  setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, outlineWidth: value[0] } : img));
-                }} max={10} min={0} step={1}>
-                  <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                    <Slider.Range className="absolute bg-gradient-to-r from-[#a855f7] to-[#c084fc] rounded-full h-full" />
-                  </Slider.Track>
-                  <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#a855f7] rounded-full" />
-                </Slider.Root>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>None</span>
-                  <span className="text-[#a855f7]">{selectedImage.outlineWidth || 0}px</span>
-                </div>
-              </div>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Border Radius</h3>
-            <Input
-              type="number"
-              value={selectedImage.borderRadius || 0}
-              onChange={(e) => setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, borderRadius: Number(e.target.value) } : img))}
-              className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-              min={0}
-              max={100}
-            />
-            <Slider.Root className="relative flex items-center w-full h-5" value={[selectedImage.borderRadius || 0]} onValueChange={(value) => {
-              setUserImages(prev => prev.map(img => img.id === selectedImage.id ? { ...img, borderRadius: value[0] } : img));
-            }} max={100} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#10b981] to-[#34d399] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#10b981] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0px</span>
-              <span className="text-[#10b981]">{selectedImage.borderRadius || 0}px</span>
-              <span>100px</span>
-            </div>
-          </div>
-        )}
-
-        {selectedText && textElements.find(t => t.id === selectedText) && (
-          <div>
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Text Properties</h3>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Position</h3>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-2 mb-3 md:mb-4">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">X</label>
-                <Input
-                  type="number"
-                  value={Math.round(textElements.find(t => t.id === selectedText)?.x || 0)}
-                  onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, x: Number(e.target.value) } : t))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Y</label>
-                <Input
-                  type="number"
-                  value={Math.round(textElements.find(t => t.id === selectedText)?.y || 0)}
-                  onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, y: Number(e.target.value) } : t))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700"
-                />
-              </div>
-            </div>
-
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Font Size</h3>
-            <Input
-              type="number"
-              value={textElements.find(t => t.id === selectedText)?.fontSize || 16}
-              onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, fontSize: Number(e.target.value) } : t))}
-              onBlur={() => saveToHistory()}
-              className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-              min={8}
-              max={200}
-            />
-
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Rotation</h3>
-            <Input
-              type="number"
-              value={Math.round(textElements.find(t => t.id === selectedText)?.rotation || 0)}
-              onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, rotation: Number(e.target.value) } : t))}
-              onBlur={() => saveToHistory()}
-              className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-              min={0}
-              max={360}
-            />
-            <Slider.Root className="relative flex items-center w-full h-5" value={[textElements.find(t => t.id === selectedText)?.rotation || 0]} onValueChange={(value) => {
-              setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, rotation: value[0] } : t));
-            }} onValueCommit={() => saveToHistory()} max={360} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#ec4899] to-[#f472b6] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#ec4899] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0°</span>
-              <span className="text-[#ec4899]">{Math.round(textElements.find(t => t.id === selectedText)?.rotation || 0)}°</span>
-              <span>360°</span>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Text Outline</h3>
-            <div className="space-y-1.5 md:space-y-2">
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Color</label>
-                <Input
-                  type="color"
-                  value={textElements.find(t => t.id === selectedText)?.outlineColor || '#000000'}
-                  onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, outlineColor: e.target.value } : t))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full h-10 cursor-pointer"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-400 mb-0.5 md:mb-1 block">Width</label>
-                <Input
-                  type="number"
-                  value={textElements.find(t => t.id === selectedText)?.outlineWidth || 0}
-                  onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, outlineWidth: Number(e.target.value) } : t))}
-                  onBlur={() => saveToHistory()}
-                  className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-                  min={0}
-                  max={5}
-                  step={0.5}
-                />
-                <Slider.Root className="relative flex items-center w-full h-5" value={[textElements.find(t => t.id === selectedText)?.outlineWidth || 0]} onValueChange={(value) => {
-                  setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, outlineWidth: value[0] } : t));
-                }} max={5} min={0} step={0.5}>
-                  <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                    <Slider.Range className="absolute bg-gradient-to-r from-[#a855f7] to-[#c084fc] rounded-full h-full" />
-                  </Slider.Track>
-                  <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#a855f7] rounded-full" />
-                </Slider.Root>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
-                  <span>None</span>
-                  <span className="text-[#a855f7]">{textElements.find(t => t.id === selectedText)?.outlineWidth || 0}px</span>
-                </div>
-              </div>
-            </div>
-            <Separator.Root className="my-2 md:my-4 h-px bg-gray-700" />
-            <h3 className="font-semibold mb-2 md:mb-3 text-sm md:text-base text-gray-300">Border Radius</h3>
-            <Input
-              type="number"
-              value={textElements.find(t => t.id === selectedText)?.borderRadius || 0}
-              onChange={(e) => setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, borderRadius: Number(e.target.value) } : t))}
-              className="w-full bg-[#071028] text-sm md:text-base text-gray-100 border-gray-700 mb-1.5 md:mb-2"
-              min={0}
-              max={100}
-            />
-            <Slider.Root className="relative flex items-center w-full h-5" value={[textElements.find(t => t.id === selectedText)?.borderRadius || 0]} onValueChange={(value) => {
-              setTextElements(prev => prev.map(t => t.id === selectedText ? { ...t, borderRadius: value[0] } : t));
-            }} max={100} min={0} step={1}>
-              <Slider.Track className="bg-gray-700 relative grow rounded-full h-2">
-                <Slider.Range className="absolute bg-gradient-to-r from-[#a855f7] to-[#c084fc] rounded-full h-full" />
-              </Slider.Track>
-              <Slider.Thumb className="block w-5 h-5 bg-[#0a1628] border-2 border-[#a855f7] rounded-full" />
-            </Slider.Root>
-            <div className="flex justify-between text-xs text-gray-400 mt-2">
-              <span>0px</span>
-              <span className="text-[#a855f7]">{textElements.find(t => t.id === selectedText)?.borderRadius || 0}px</span>
-              <span>100px</span>
-            </div>
-          </div>
-        )}
-
-        {!selectedSticker && !selectedImageId && !selectedText && (
-          <div className="text-sm text-gray-400 space-y-2">
-            <p className="mb-4">Select a sticker or image to customize.</p>
-            <p className="flex items-center gap-2"><span className="w-2 h-2 bg-[#ec4899] rounded-full"></span>Stickers: {stickers.length}</p>
-            <p className="flex items-center gap-2"><span className="w-2 h-2 bg-[#26C4E1] rounded-full"></span>Text: {textElements.length}</p>
-            <p className="flex items-center gap-2"><span className="w-2 h-2 bg-[#a855f7] rounded-full"></span>Images: {userImages.length}</p>
-          </div>
-        )}
-      </div>
-
-        <div className="fixed right-0 mx-3 lg:mx-5 my-1 xl:flex items-start">
+      {/* Layers Panel */}
+      <div className="fixed right-0 mx-3 lg:mx-5 my-1 xl:flex items-start">
           <LayersPanel
             layers={layersForPanel}
             selectedId={selectedSticker || selectedText || selectedImageId}
