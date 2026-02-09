@@ -107,7 +107,7 @@ export default function Home() {
               {/* Action Buttons */}
               <button 
                 onClick={handleDownload}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#26C4E1] to-[#60a5fa] text-white rounded-lg hover:opacity-90 transition font-medium text-sm whitespace-nowrap"
+                className=" items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#26C4E1] to-[#60a5fa] text-white rounded-lg hover:opacity-90 transition font-medium text-sm whitespace-nowrap"
                 title="Download PNG"
               >
                 <Download className="w-4 h-4" />
@@ -116,7 +116,7 @@ export default function Home() {
               
               <button 
                 onClick={handleOpenGmail}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 bg-[#1a2332] border border-gray-700 text-gray-100 rounded-lg hover:bg-[#2a3342] transition font-medium text-sm whitespace-nowrap"
+                className=" items-center gap-2 px-3 py-2 bg-[#1a2332] border border-gray-700 text-gray-100 rounded-lg hover:bg-[#2a3342] transition font-medium text-sm whitespace-nowrap"
                 title="Send via Gmail"
               >
                 <Mail className="w-4 h-4" />

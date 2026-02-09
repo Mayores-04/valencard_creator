@@ -23,7 +23,13 @@ export function StickerGrid({ stickers, type, onStickerClick, onDragStart, iconD
               key={index}
               draggable
               onDragStart={(e) => onDragStart(e, iconString, false, true)}
-              onClick={() => onStickerClick(iconString, false, true)}
+              onClick={() => {
+                try {
+                  // eslint-disable-next-line no-console
+                  console.debug('StickerGrid click icon', { iconString });
+                } catch (er) {}
+                onStickerClick(iconString, false, true);
+              }}
               className="aspect-square border-2 border-gray-600 rounded-lg hover:border-[#a855f7] hover:shadow-[0_0_15px_rgba(168,85,247,0.5)] transition bg-[#0a1628] cursor-grab active:cursor-grabbing flex items-center justify-center"
               title={`${iconItem.name} - Drag to canvas or click to add`}
             >
@@ -40,10 +46,16 @@ export function StickerGrid({ stickers, type, onStickerClick, onDragStart, iconD
       <div className={`grid ${gridClass} gap-1.5 md:gap-2`}>
         {stickers.map((emoji, index) => (
           <div
-            key={index}
-            draggable
-            onDragStart={(e) => onDragStart(e, emoji, true, false)}
-            onClick={() => onStickerClick(emoji, true, false)}
+              key={index}
+              draggable
+              onDragStart={(e) => onDragStart(e, emoji, true, false)}
+              onClick={() => {
+                try {
+                  // eslint-disable-next-line no-console
+                  console.debug('StickerGrid click emoji', { emoji });
+                } catch (er) {}
+                onStickerClick(emoji, true, false);
+              }}
             className="text-2xl sm:text-3xl aspect-square border-2 border-gray-600 rounded-lg hover:border-[#ec4899] hover:shadow-[0_0_15px_rgba(236,72,153,0.5)] transition bg-[#0a1628] cursor-grab active:cursor-grabbing flex items-center justify-center"
             title="Drag to canvas or click to add"
           >
@@ -61,7 +73,13 @@ export function StickerGrid({ stickers, type, onStickerClick, onDragStart, iconD
           key={index}
           draggable
           onDragStart={(e) => onDragStart(e, sticker, false)}
-          onClick={() => onStickerClick(sticker)}
+          onClick={() => {
+            try {
+              // eslint-disable-next-line no-console
+              console.debug('StickerGrid click sticker', { sticker });
+            } catch (er) {}
+            onStickerClick(sticker);
+          }}
           className="aspect-square border-2 border-gray-600 rounded-lg hover:border-[#26C4E1] hover:shadow-[0_0_15px_rgba(38,196,225,0.5)] transition overflow-hidden bg-[#0a1628] cursor-grab active:cursor-grabbing"
           title="Drag to canvas or click to add"
         >
