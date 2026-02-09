@@ -1,8 +1,6 @@
 import * as ContextMenu from '@radix-ui/react-context-menu';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Button } from '@/app/components/ui/button';
-import { MoreVertical } from 'lucide-react';
-import { DropdownMenuItems, ContextMenuItems } from './ElementMenuItems';
+// removed three-dot DropdownMenu trigger; use right-click context menu only
+import { ContextMenuItems } from './ElementMenuItems';
 import { ResizeHandles } from './ResizeHandles';
 
 interface TextElement {
@@ -77,32 +75,6 @@ export function TextElementComponent({
           {textElement.text}
           
           {/* Three-dot options button */}
-          {isSelected && (
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <Button
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-[#ec4899] text-white rounded-full hover:bg-[#db2777] flex items-center justify-center shadow-lg z-10"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50" side="right" align="start" sideOffset={8}>
-                  <DropdownMenuItems
-                    elementId={textElement.id}
-                    elementType="text"
-                    onCopy={onCopy}
-                    onBringToFront={onBringToFront}
-                    onBringForward={onBringForward}
-                    onSendBackward={onSendBackward}
-                    onSendToBack={onSendToBack}
-                    onDelete={onDelete}
-                  />
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-
-          {/* Rotation handle for text */}
           {isSelected && onRotateStart && (
             <ResizeHandles 
               onResizeStart={() => {}}
@@ -111,12 +83,13 @@ export function TextElementComponent({
               color="blue"
             />
           )}
-            </DropdownMenu.Root>
-          )}
         </div>
       </ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
+        <ContextMenu.Content
+          className="min-w-[160px] text-gray-100 z-50"
+          style={{ background: 'transparent', padding: 0, boxShadow: 'none', border: 'none' }}
+        >
           <ContextMenuItems
             elementId={textElement.id}
             elementType="text"

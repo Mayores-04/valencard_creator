@@ -152,8 +152,6 @@ export function makeHandleImageUpload({ setUserImages, templateData, selectEleme
             rotation: 0,
             shape: "rectangle",
             offset: { x: 0, y: 0 },
-            outlineColor: undefined,
-            outlineWidth: 0,
           };
 
           setTimeout(() => selectElement(newImage.id, "image"), 0);

@@ -8,7 +8,6 @@ import * as Slider from "@radix-ui/react-slider";
 import * as ScrollArea from "@radix-ui/react-scroll-area";
 import * as Separator from "@radix-ui/react-separator";
 import * as ContextMenu from "@radix-ui/react-context-menu";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import GmailModal from "@/app/components/GmailModal";
@@ -36,7 +35,6 @@ import {
   ArrowUpToLine,
   ArrowDownToLine,
   Trash2,
-  MoreVertical,
   Download,
   Mail,
   RotateCw,
@@ -163,6 +161,19 @@ export default function CardEditor({
     dragging: boolean;
     startX: number;
     startY: number;
+  } | null>(null);
+
+  const resizingRef = useRef<{
+    id: string;
+    corner: string;
+    type: ElementType;
+    startMouseX: number;
+    startMouseY: number;
+    startX: number;
+    startY: number;
+    startWidth: number;
+    startHeight: number;
+    startOffset?: { x: number; y: number };
   } | null>(null);
 
   const zoom = externalZoom;
@@ -1050,28 +1061,145 @@ export default function CardEditor({
     [canvasRef, stickers, textElements, userImages, selectElement],
   );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent | any) => {
-    if (!canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent | any) => {
+      if (!canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
 
-    if (dragging) {
-      if (dragging.type === "sticker") {
-        updateStickerPosition(dragging.id, mouseX - dragging.offsetX, mouseY - dragging.offsetY);
-      } else if (dragging.type === "text") {
-        updateTextPosition(dragging.id, mouseX - dragging.offsetX, mouseY - dragging.offsetY);
-      } else if (dragging.type === "image") {
-        setUserImages((prev) =>
-          prev.map((img) =>
-            img.id === dragging.id
-              ? { ...img, x: mouseX - dragging.offsetX, y: mouseY - dragging.offsetY }
-              : img,
-          ),
-        );
+      // If rotating, compute new rotation based on mouse angle
+      if (rotating) {
+        const r = rotating;
+        let centerX = 0;
+        let centerY = 0;
+
+        if (r.type === "sticker") {
+          const s = stickers.find((st) => st.id === r.id);
+          if (!s) return;
+          centerX = s.x + s.width / 2;
+          centerY = s.y + s.height / 2;
+        } else if (r.type === "text") {
+          const t = textElements.find((tt) => tt.id === r.id);
+          if (!t) return;
+          centerX = t.x + 50;
+          centerY = t.y + 20;
+        } else {
+          const img = userImages.find((u) => u.id === r.id);
+          if (!img) return;
+          centerX = img.x + img.width / 2;
+          centerY = img.y + img.height / 2;
+        }
+
+        const angle = (Math.atan2(mouseY - centerY, mouseX - centerX) * 180) / Math.PI;
+        const delta = angle - rotating.startAngle;
+        const newRotation = rotating.currentRotation + delta;
+
+        if (rotating.type === "sticker") {
+          setStickers((prev) => prev.map((s) => (s.id === rotating.id ? { ...s, rotation: newRotation } : s)));
+        } else if (rotating.type === "text") {
+          setTextElements((prev) => prev.map((t) => (t.id === rotating.id ? { ...t, rotation: newRotation } : t)));
+        } else if (rotating.type === "image") {
+          setUserImages((prev) => prev.map((img) => (img.id === rotating.id ? { ...img, rotation: newRotation } : img)));
+        }
+
+        return;
       }
-    }
-  }, [canvasRef, dragging, updateStickerPosition, updateTextPosition]);
+
+      // If resizing, compute new size/position based on corner
+      if (resizing && resizingRef.current) {
+        const r = resizingRef.current;
+        const minSize = r.type === "image" ? 50 : 30;
+        let newX = r.startX;
+        let newY = r.startY;
+        let newWidth = r.startWidth;
+        let newHeight = r.startHeight;
+        const dx = mouseX - r.startMouseX;
+        const dy = mouseY - r.startMouseY;
+
+        if (r.corner.includes("e")) {
+          newWidth = Math.max(minSize, r.startWidth + dx);
+        }
+        if (r.corner.includes("w")) {
+          newWidth = Math.max(minSize, r.startWidth - dx);
+          newX = r.startX + (r.startWidth - newWidth);
+        }
+        if (r.corner.includes("s")) {
+          newHeight = Math.max(minSize, r.startHeight + dy);
+        }
+        if (r.corner.includes("n")) {
+          newHeight = Math.max(minSize, r.startHeight - dy);
+          newY = r.startY + (r.startHeight - newHeight);
+        }
+
+        if (r.type === "sticker") {
+          setStickers((prev) => prev.map((s) => (s.id === r.id ? { ...s, x: newX, y: newY, width: newWidth, height: newHeight } : s)));
+        } else if (r.type === "image") {
+          // If Alt is held while resizing, pan the image content relative to the
+          // original offset captured at resize start. Otherwise only update size/pos.
+          const shouldPan = !!(r.startOffset && (e?.altKey));
+          setUserImages((prev) =>
+            prev.map((img) => {
+              if (img.id !== r.id) return img;
+              let newImg = { ...img, x: newX, y: newY, width: newWidth, height: newHeight };
+              if (shouldPan && r.startOffset) {
+                // compute percentage delta relative to the original size
+                const deltaPercentX = (dx / Math.max(1, r.startWidth)) * 100;
+                const deltaPercentY = (dy / Math.max(1, r.startHeight)) * 100;
+                const combinedX = (r.startOffset?.x || 0) + deltaPercentX;
+                const combinedY = (r.startOffset?.y || 0) + deltaPercentY;
+                // clamp roughly to keep object-position sensible
+                const clampedX = Math.max(-50, Math.min(50, combinedX));
+                const clampedY = Math.max(-50, Math.min(50, combinedY));
+                newImg.offset = { x: clampedX, y: clampedY };
+              }
+              return newImg;
+            }),
+          );
+        } else if (r.type === "text") {
+          setTextElements((prev) => prev.map((t) => (t.id === r.id ? { ...t, x: newX, y: newY } : t)));
+        }
+
+        return;
+      }
+
+      // Image panning (Alt-drag on image content)
+      if (panningImage) {
+        const p = panningImage;
+        const dx = mouseX - p.startX;
+        const dy = mouseY - p.startY;
+        setUserImages((prev) =>
+          prev.map((img) => {
+            if (img.id !== p.id) return img;
+            // convert pixel delta into percent based on current element size
+            const deltaXPercent = (dx / Math.max(1, img.width)) * 100;
+            const deltaYPercent = (dy / Math.max(1, img.height)) * 100;
+            const newX = (p.initialOffset?.x || 0) + deltaXPercent;
+            const newY = (p.initialOffset?.y || 0) + deltaYPercent;
+            return {
+              ...img,
+              offset: {
+                x: Math.max(-50, Math.min(50, newX)),
+                y: Math.max(-50, Math.min(50, newY)),
+              },
+            };
+          }),
+        );
+        return;
+      }
+
+      if (dragging) {
+        if (dragging.type === "sticker") {
+          updateStickerPosition(dragging.id, mouseX - dragging.offsetX, mouseY - dragging.offsetY);
+        } else if (dragging.type === "text") {
+          updateTextPosition(dragging.id, mouseX - dragging.offsetX, mouseY - dragging.offsetY);
+        } else if (dragging.type === "image") {
+          setUserImages((prev) => prev.map((img) => (img.id === dragging.id ? { ...img, x: mouseX - dragging.offsetX, y: mouseY - dragging.offsetY } : img)));
+        }
+      }
+    },
+    [canvasRef, dragging, updateStickerPosition, updateTextPosition, resizing, rotating, panningImage, stickers, textElements, userImages],
+  );
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent | any, id: string, corner: string, type?: ElementType) => {
@@ -1083,6 +1211,61 @@ export default function CardEditor({
         else if (textElements.find((t) => t.id === id)) resolvedType = "text";
         else if (userImages.find((u) => u.id === id)) resolvedType = "image";
       }
+
+      // capture initial metrics for resizing
+      if (canvasRef.current) {
+        const rect = canvasRef.current.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        let startX = 0;
+        let startY = 0;
+        let startWidth = 100;
+        let startHeight = 100;
+        let _startOffset = { x: 0, y: 0 };
+
+        if (resolvedType === "sticker") {
+          const s = stickers.find((st) => st.id === id);
+          if (s) {
+            startX = s.x;
+            startY = s.y;
+            startWidth = s.width;
+            startHeight = s.height;
+          }
+        } else if (resolvedType === "image") {
+          const img = userImages.find((u) => u.id === id);
+          if (img) {
+            startX = img.x;
+            startY = img.y;
+            startWidth = img.width;
+            startHeight = img.height;
+            // capture current image offset so we can pan the image while resizing
+            _startOffset = { ...img.offset };
+          }
+        } else if (resolvedType === "text") {
+          const t = textElements.find((tt) => tt.id === id);
+          if (t) {
+            startX = t.x;
+            startY = t.y;
+            startWidth = Math.max(30, t.fontSize * 4);
+            startHeight = Math.max(20, t.fontSize * 1.5);
+          }
+        }
+
+        resizingRef.current = {
+          id,
+          corner,
+          type: resolvedType,
+          startMouseX: mouseX,
+          startMouseY: mouseY,
+          startX,
+          startY,
+          startWidth,
+          startHeight,
+          startOffset: _startOffset,
+        };
+      }
+
       setResizing({ id, corner, type: resolvedType });
     },
     [stickers, textElements, userImages],
@@ -1125,6 +1308,7 @@ export default function CardEditor({
   const handleMouseUp = useCallback(() => {
     const hadInteraction = resizing || dragging || panningImage || rotating;
     setResizing(null);
+    resizingRef.current = null;
     setDragging(null);
     setPanningImage(null);
     setRotating(null);
@@ -1253,62 +1437,6 @@ export default function CardEditor({
     return combined.reverse();
   }, [userImages, stickers, textElements, hiddenMap]);
 
-  // Render context menu
-  const renderContextMenu = useCallback(
-    (id: string, type: ElementType) => (
-      <ContextMenu.Portal>
-        <ContextMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#26C4E1]/10 rounded flex items-center gap-2"
-            onSelect={() => copyElement(id, type)}
-          >
-            <Copy className="w-4 h-4 text-[#26C4E1]" /> Duplicate
-          </ContextMenu.Item>
-          <ContextMenu.Separator className="h-px bg-gray-700 my-1" />
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-            onSelect={() => bringToFront(id, type)}
-          >
-            <ArrowUpToLine className="w-4 h-4 text-[#a855f7]" /> Bring to Front
-          </ContextMenu.Item>
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-            onSelect={() => bringForward(id, type)}
-          >
-            <MoveUp className="w-4 h-4 text-[#a855f7]" /> Bring Forward
-          </ContextMenu.Item>
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-            onSelect={() => sendBackward(id, type)}
-          >
-            <MoveDown className="w-4 h-4 text-[#a855f7]" /> Send Backward
-          </ContextMenu.Item>
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-[#a855f7]/10 rounded flex items-center gap-2"
-            onSelect={() => sendToBack(id, type)}
-          >
-            <ArrowDownToLine className="w-4 h-4 text-[#a855f7]" /> Send to Back
-          </ContextMenu.Item>
-          <ContextMenu.Separator className="h-px bg-gray-700 my-1" />
-          <ContextMenu.Item
-            className="text-sm px-3 py-2 outline-none cursor-pointer hover:bg-red-900/20 rounded flex items-center gap-2 text-red-400"
-            onSelect={() => deleteElement(id, type)}
-          >
-            <Trash2 className="w-4 h-4" /> Delete
-          </ContextMenu.Item>
-        </ContextMenu.Content>
-      </ContextMenu.Portal>
-    ),
-    [
-      copyElement,
-      bringToFront,
-      bringForward,
-      sendBackward,
-      sendToBack,
-      deleteElement,
-    ],
-  );
-
   // Render dropdown menu
   const handleImageUpload = useMemo(
     () => makeHandleImageUpload({ setUserImages, templateData, selectElement, saveToHistory }),
@@ -1361,7 +1489,7 @@ export default function CardEditor({
         lastPolledDebug={lastPolledDebug}
         addText={addText}
         addTextTemplate={addTextTemplate}
-        textTemplates={textTemplates}
+        textTemplates={textTemplates} 
         fontFamilies={fontFamilies}
         updateTextFont={updateTextFont}
         updateTextColor={updateTextColor}

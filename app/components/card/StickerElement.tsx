@@ -1,9 +1,7 @@
 import Image from 'next/image';
 import * as ContextMenu from '@radix-ui/react-context-menu';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Button } from '@/app/components/ui/button';
-import { MoreVertical, Heart, Star, Sparkles, Music, Coffee, Gift, Crown, Cake, Flower2, Sun, Moon, Cloud } from 'lucide-react';
-import { DropdownMenuItems, ContextMenuItems } from './ElementMenuItems';
+import { Heart, Star, Sparkles, Music, Coffee, Gift, Crown, Cake, Flower2, Sun, Moon, Cloud } from 'lucide-react';
+import { ContextMenuItems } from './ElementMenuItems';
 import { ResizeHandles } from './ResizeHandles';
 
 interface Sticker {
@@ -177,32 +175,7 @@ export function StickerElement({
           {/* Three-dot options button and resize handles - outside clipped area */}
           {isSelected && (
             <>
-              <DropdownMenu.Root>
-                <DropdownMenu.Trigger asChild>
-                  <Button
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-[#a855f7] text-white rounded-full hover:bg-[#9333ea] flex items-center justify-center shadow-lg z-20 pointer-events-auto"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </Button>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Portal>
-                  <DropdownMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50" side="right" align="start" sideOffset={8}>
-                    <DropdownMenuItems
-                      elementId={sticker.id}
-                      elementType="sticker"
-                      onCopy={onCopy}
-                      onBringToFront={onBringToFront}
-                      onBringForward={onBringForward}
-                      onSendBackward={onSendBackward}
-                      onSendToBack={onSendToBack}
-                      onDelete={onDelete}
-                    />
-                  </DropdownMenu.Content>
-                </DropdownMenu.Portal>
-              </DropdownMenu.Root>
-
-              {/* Resize and Rotation handles */}
+              {/* Resize and Rotation handles - right-click context still available */}
               <ResizeHandles 
                 onResizeStart={onResizeStart} 
                 onRotateStart={onRotateStart ? (e) => onRotateStart(e, sticker.id) : undefined}
@@ -214,7 +187,10 @@ export function StickerElement({
         </div>
       </ContextMenu.Trigger>
       <ContextMenu.Portal>
-        <ContextMenu.Content className="min-w-[160px] bg-[#1a2332] text-gray-100 rounded-md p-1 shadow-lg border border-gray-700 z-50">
+        <ContextMenu.Content
+          className="min-w-[160px] text-gray-100 z-50"
+          style={{ background: 'transparent', padding: 0, boxShadow: 'none', border: 'none' }}
+        >
           <ContextMenuItems
             elementId={sticker.id}
             elementType="sticker"

@@ -104,7 +104,7 @@ export default function Home() {
                 </button>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons
               <button 
                 onClick={handleDownload}
                 className=" items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#26C4E1] to-[#60a5fa] text-white rounded-lg hover:opacity-90 transition font-medium text-sm whitespace-nowrap"
@@ -121,7 +121,7 @@ export default function Home() {
               >
                 <Mail className="w-4 h-4" />
                 <span className="hidden lg:inline">Send</span>
-              </button>
+              </button> */}
             </div>
           </div>
         </div>

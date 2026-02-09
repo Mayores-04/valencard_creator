@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function UploadPage(props: any) {
@@ -8,16 +8,18 @@ export default function UploadPage(props: any) {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>('');
   const [dataUrl, setDataUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const serverPath = `/upload/${session}`;
+  const [displayUrl, setDisplayUrl] = useState<string>(serverPath);
+
   useEffect(() => {
-    // params may be a Promise in some Next.js contexts; handle both promise and object
     if (params) {
       if (typeof params.then === 'function') {
-        // params is a Promise
         (params as Promise<any>).then((p) => {
           if (p?.sessionId) setSession(String(p.sessionId));
         }).catch(() => {
-          // fallback to location
           if (typeof window !== 'undefined') setSession(window.location.pathname.split('/').pop() || '');
         });
       } else if (params.sessionId) {
@@ -28,9 +30,34 @@ export default function UploadPage(props: any) {
     }
   }, [params]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // update visible URL after client mounts so we don't read window during server render
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        setDisplayUrl(window.location.href);
+      } catch (e) {
+        setDisplayUrl(`/upload/${session}`);
+      }
+    } else {
+      setDisplayUrl(`/upload/${session}`);
+    }
+  }, [session]);
+
+  const handleFileChange = (f: File | null) => {
+    setFile(f);
+    if (f) {
+      const reader = new FileReader();
+      reader.onload = () => setDataUrl(String(reader.result || ''));
+      reader.readAsDataURL(f);
+    } else {
+      setDataUrl(null);
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!file) return setStatus('Choose a file first');
+    setUploading(true);
     setStatus('Uploading...');
     const form = new FormData();
     form.append('file', file);
@@ -40,16 +67,9 @@ export default function UploadPage(props: any) {
       const res = await fetch('/api/upload', { method: 'POST', body: form });
       const body = await res.json();
       if (body.ok) {
-        if (body.url) {
-          setStatus(`Upload successful: ${body.url}`);
-          setDataUrl(null);
-          setTimeout(() => router.refresh(), 500);
-        } else if (body.dataUrl) {
-          setStatus('Upload succeeded (data URL fallback)');
-          setDataUrl(body.dataUrl);
-        } else {
-          setStatus('Upload succeeded (unknown response)');
-        }
+        setStatus('Upload successful');
+        setFile(null);
+        setTimeout(() => router.refresh(), 500);
       } else {
         setStatus(`Upload failed: ${body.error || JSON.stringify(body)}`);
         console.error('Upload failed response', body);
@@ -57,36 +77,61 @@ export default function UploadPage(props: any) {
     } catch (err) {
       setStatus(`Upload error: ${String(err)}`);
       console.error('Upload exception', err);
+    } finally {
+      setUploading(false);
     }
   };
 
   return (
-    <div style={{ padding: 20, background: '#071028', color: '#eee', minHeight: '100vh' }}>
-      <h2>Upload to session: {session}</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} />
-        <div style={{ marginTop: 10 }}>
-          <button type="submit" style={{ padding: '8px 12px' }}>Upload</button>
+    <div className="min-h-screen bg-[#071028] text-gray-100 p-6 flex flex-col items-center">
+      <div className="w-full max-w-xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold">Upload Photo to Card</h1>
+          <p className="text-sm text-gray-300 mt-1">Session: <span className="font-mono text-xs text-cyan-300">{session}</span></p>
         </div>
-      </form>
-        <div style={{ marginTop: 12 }}>{status}</div>
-        {dataUrl && (
-          <div style={{ marginTop: 12 }}>
-            <div>Preview:</div>
-            <img src={dataUrl} alt="uploaded" style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} />
-            <div style={{ marginTop: 8 }}>
-              <button onClick={() => {
-                navigator.clipboard.writeText(dataUrl);
-                setStatus('Data URL copied to clipboard');
-              }} style={{ padding: '8px 12px' }}>
-                Copy URL
-              </button>
+
+        <div className="bg-[#081226] rounded-lg border border-gray-700 p-4">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <label htmlFor="file" className="block text-sm font-medium text-gray-200 mb-2">Select or Take Photo</label>
+              <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 flex flex-col items-center justify-center bg-transparent">
+                {dataUrl ? (
+                  <img src={dataUrl} alt="preview" className="max-h-64 object-contain rounded-md" />
+                ) : (
+                  <div className="text-center text-gray-400">
+                    <div className="text-lg">No photo selected</div>
+                    <div className="text-xs mt-1">Tap the button below to choose or take a photo from your phone.</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <input ref={inputRef} id="file" type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => handleFileChange(e.target.files ? e.target.files[0] : null)} />
+                <button onClick={() => inputRef.current?.click()} className="px-4 py-2 bg-[#26C4E1] text-[#071028] rounded-md font-medium">Choose / Take Photo</button>
+                <button onClick={() => handleSubmit()} disabled={uploading || !file} className={`px-4 py-2 rounded-md font-medium ${uploading || !file ? 'bg-gray-600 text-gray-400' : 'bg-[#a855f7] text-white'}`}>{uploading ? 'Uploading...' : 'Upload'}</button>
+              </div>
+
+              <div className="mt-3 text-sm text-gray-400">After upload, the image will appear automatically on your desktop editor canvas.</div>
             </div>
-            <div style={{ marginTop: 8, fontSize: 12, opacity: 0.9 }}>
-              If this page is deployed to a serverless host (read-only filesystem), copy the Data URL and paste it into the desktop editor's image URL input.
+
+            <div className="w-64">
+              <div className="bg-[#061224] p-3 rounded-md border border-gray-800 text-sm">
+                <div className="font-semibold mb-2">How to use</div>
+                <ol className="list-decimal list-inside text-gray-300">
+                  <li>Scan the QR or open the session link from the desktop Tools &gt; Image &gt; Insert from Phone.</li>
+                  <li>Choose or take a photo on your phone.</li>
+                  <li>Tap Upload — your image will appear on the desktop canvas.</li>
+                </ol>
+                <div className="mt-3">
+                  <a className="text-cyan-300 break-all text-xs" href={`/upload/${session}`}>{displayUrl}</a>
+                </div>
+              </div>
             </div>
           </div>
-        )}
+
+          <div className="mt-4 text-sm text-gray-300">{status}</div>
+        </div>
+      </div>
     </div>
   );
 }
